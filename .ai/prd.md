@@ -189,14 +189,6 @@ Acceptance Criteria:
 - No record is stored; Need review toggles before quit are still respected.
 
 ID: US-015
-Title: Secure session handling
-Description: As a user, I want my session to expire after inactivity to protect my data.
-Acceptance Criteria:
-
-- Inactivity timeout (e.g., 1 hour) logs the user out.
-- Refresh token or session cookie is invalidated.
-
-ID: US-016
 Title: Logout
 Description: As a user, I want to log out so others cannot access my data on a shared computer.
 Acceptance Criteria:
@@ -204,7 +196,7 @@ Acceptance Criteria:
 - Logout control available in navigation.
 - Clicking logout clears the session and redirects to sign-in.
 
-ID: US-017
+ID: US-016
 Title: Error handling for content load
 Description: As a user, I want to see a friendly error if the kanji data fails to load so I know what happened.
 Acceptance Criteria:
@@ -213,7 +205,7 @@ Acceptance Criteria:
 - Retry option is provided.
 - No blank screens are shown.
 
-ID: US-018
+ID: US-017
 Title: Performance requirement
 Description: As a user on a slow connection, I expect the first quiz question to load quickly so I can start practicing.
 Acceptance Criteria:
