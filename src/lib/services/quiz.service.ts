@@ -5,6 +5,7 @@ import type {
   QuizQuestionDTO,
   JLPTLevel,
   QuizType,
+  QuizStatus,
   KanjiEntity,
   KanjiDTO,
   QuestionType,
@@ -19,6 +20,24 @@ export interface CreateQuizParams {
   type: QuizType;
   level?: JLPTLevel;
   questionCount: number;
+}
+
+/**
+ * Parameters for listing quizzes
+ */
+export interface GetQuizListParams {
+  userId: string;
+  status?: QuizStatus;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Result structure for quiz list with pagination
+ */
+export interface QuizListResult {
+  quizzes: QuizDTO[];
+  total: number;
 }
 
 /**
@@ -367,5 +386,51 @@ export class QuizService {
       return json.filter((item): item is string => typeof item === "string");
     }
     return [];
+  }
+
+  /**
+   * Retrieves a paginated list of quizzes for a user with optional status filtering
+   *
+   * Process:
+   * 1. Build base query filtering by user_id
+   * 2. Apply optional status filter
+   * 3. Order by created_at DESC (most recent first)
+   * 4. Apply pagination (limit and offset)
+   * 5. Execute query with count for pagination metadata
+   * 6. Return quizzes with total count
+   *
+   * @param params - Quiz list parameters with pagination and filtering
+   * @returns QuizListResult with quizzes array and total count
+   * @throws QuizCreationError if database query fails
+   */
+  async getQuizList(params: GetQuizListParams): Promise<QuizListResult> {
+    const { userId, status, limit, offset } = params;
+
+    try {
+      let query = this.supabase
+        .from("quiz")
+        .select("*", { count: "exact" })
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (status) {
+        query = query.eq("status", status);
+      }
+
+      query = query.range(offset, offset + limit - 1);
+
+      const { data, count, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        quizzes: data || [],
+        total: count || 0,
+      };
+    } catch (error) {
+      throw new QuizCreationError("Failed to retrieve quiz list", error);
+    }
   }
 }

@@ -56,3 +56,36 @@ export type CreateQuizSchema = z.infer<typeof createQuizSchema>;
 export function parseCreateQuizBody(body: unknown): CreateQuizSchema {
   return createQuizSchema.parse(body);
 }
+
+/**
+ * Validation schema for GET /api/quizzes query parameters
+ *
+ * Supports filtering and pagination:
+ * - status: Optional filter by quiz status
+ * - limit: Number of results per page (1-100, default 20)
+ * - offset: Pagination offset (min 0, default 0)
+ */
+export const getQuizListQuerySchema = z.object({
+  status: z.enum(["in_progress", "completed", "abandoned"]).optional(),
+  limit: z.number().int().min(1, "Limit must be at least 1").max(100, "Limit cannot exceed 100").default(20),
+  offset: z.number().int().min(0, "Offset must be non-negative").default(0),
+});
+
+export type GetQuizListQuery = z.infer<typeof getQuizListQuerySchema>;
+
+/**
+ * Parses and validates query parameters for quiz list retrieval
+ *
+ * @param query - URLSearchParams from request URL
+ * @returns Validated GetQuizListQuery with defaults applied
+ * @throws ZodError if validation fails with detailed error messages
+ */
+export function parseGetQuizListQuery(query: URLSearchParams): GetQuizListQuery {
+  const rawParams = {
+    status: query.get("status") || undefined,
+    limit: query.get("limit") ? Number(query.get("limit")) : 20,
+    offset: query.get("offset") ? Number(query.get("offset")) : 0,
+  };
+
+  return getQuizListQuerySchema.parse(rawParams);
+}
