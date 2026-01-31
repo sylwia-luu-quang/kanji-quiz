@@ -1,0 +1,219 @@
+import type { SupabaseClient } from "../../db/supabase.client";
+import type { NeedReviewDTO, KanjiDTO, KanjiEntity, NeedReviewEntity } from "../../types";
+import { KanjiNotFoundError, NeedReviewCreationError } from "../errors/need-review.errors";
+
+/**
+ * Result structure for addNeedReview operation
+ * Contains the need-review DTO and a flag indicating if it's a new entry
+ */
+export interface AddNeedReviewResult {
+  needReview: NeedReviewDTO;
+  isNewEntry: boolean;
+}
+
+/**
+ * Database entity structure for need_reviews joined with kanji
+ */
+interface NeedReviewWithKanji extends NeedReviewEntity {
+  kanji: KanjiEntity;
+}
+
+/**
+ * Service for managing need-review operations
+ * Handles adding kanji to user's need-review list with idempotent behavior
+ */
+export class NeedReviewService {
+  constructor(private supabase: SupabaseClient) {}
+
+  /**
+   * Adds a kanji to the user's need-review list (idempotent operation)
+   *
+   * Process:
+   * 1. Verify kanji exists in database
+   * 2. Check if entry already exists for this user and kanji
+   * 3. If exists: Return existing entry with isNewEntry=false
+   * 4. If not: Insert new entry and return with isNewEntry=true
+   * 5. Return complete data with embedded kanji details
+   *
+   * @param userId - ID of the authenticated user
+   * @param kanjiId - ID of the kanji to add to need-review list
+   * @returns AddNeedReviewResult with needReview DTO and isNewEntry flag
+   * @throws KanjiNotFoundError if specified kanji doesn't exist
+   * @throws NeedReviewCreationError if database operation fails
+   */
+  async addNeedReview(userId: string, kanjiId: number): Promise<AddNeedReviewResult> {
+    // Step 1: Verify kanji exists
+    await this.verifyKanjiExists(kanjiId);
+
+    // Step 2: Check for existing entry (idempotent check)
+    const existing = await this.fetchExistingNeedReview(userId, kanjiId);
+
+    if (existing) {
+      // Entry already exists, return it with isNewEntry=false
+      return {
+        needReview: existing,
+        isNewEntry: false,
+      };
+    }
+
+    // Step 3: Create new entry
+    const newNeedReview = await this.insertNeedReview(userId, kanjiId);
+
+    return {
+      needReview: newNeedReview,
+      isNewEntry: true,
+    };
+  }
+
+  /**
+   * Verifies that a kanji exists in the database
+   *
+   * @param kanjiId - ID of the kanji to verify
+   * @throws KanjiNotFoundError if kanji doesn't exist
+   */
+  private async verifyKanjiExists(kanjiId: number): Promise<void> {
+    const { data, error } = await this.supabase.from("kanji").select("id").eq("id", kanjiId).maybeSingle();
+
+    if (error) {
+      throw new NeedReviewCreationError("Failed to verify kanji existence", error);
+    }
+
+    if (!data) {
+      throw new KanjiNotFoundError(kanjiId);
+    }
+  }
+
+  /**
+   * Fetches an existing need-review entry if it exists
+   *
+   * @param userId - User ID to check
+   * @param kanjiId - Kanji ID to check
+   * @returns NeedReviewDTO if found, null if not found
+   * @throws NeedReviewCreationError if database query fails
+   */
+  private async fetchExistingNeedReview(userId: string, kanjiId: number): Promise<NeedReviewDTO | null> {
+    const { data, error } = await this.supabase
+      .from("need_reviews")
+      .select(
+        `
+        id,
+        user_id,
+        kanji_id,
+        created_at,
+        kanji:kanji_id (
+          id,
+          character,
+          level,
+          readings,
+          meanings,
+          created_at
+        )
+      `
+      )
+      .eq("user_id", userId)
+      .eq("kanji_id", kanjiId)
+      .maybeSingle();
+
+    if (error) {
+      throw new NeedReviewCreationError("Failed to check existing need-review entry", error);
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return this.transformToNeedReviewDTO(data as NeedReviewWithKanji);
+  }
+
+  /**
+   * Inserts a new need-review entry into the database
+   *
+   * @param userId - User ID
+   * @param kanjiId - Kanji ID
+   * @returns NeedReviewDTO with complete data
+   * @throws NeedReviewCreationError if insertion fails
+   */
+  private async insertNeedReview(userId: string, kanjiId: number): Promise<NeedReviewDTO> {
+    // Insert the new need-review entry
+    const { data: insertData, error: insertError } = await this.supabase
+      .from("need_reviews")
+      .insert({
+        user_id: userId,
+        kanji_id: kanjiId,
+      })
+      .select()
+      .single();
+
+    if (insertError || !insertData) {
+      throw new NeedReviewCreationError("Failed to create need-review entry", insertError);
+    }
+
+    // Fetch complete data with kanji details
+    const { data, error } = await this.supabase
+      .from("need_reviews")
+      .select(
+        `
+        id,
+        user_id,
+        kanji_id,
+        created_at,
+        kanji:kanji_id (
+          id,
+          character,
+          level,
+          readings,
+          meanings,
+          created_at
+        )
+      `
+      )
+      .eq("id", insertData.id)
+      .single();
+
+    if (error || !data) {
+      throw new NeedReviewCreationError("Failed to fetch created need-review entry", error);
+    }
+
+    return this.transformToNeedReviewDTO(data as NeedReviewWithKanji);
+  }
+
+  /**
+   * Transforms database entity to NeedReviewDTO with embedded KanjiDTO
+   *
+   * @param entity - Database entity with joined kanji data
+   * @returns Properly typed NeedReviewDTO
+   */
+  private transformToNeedReviewDTO(entity: NeedReviewWithKanji): NeedReviewDTO {
+    const kanjiDTO: KanjiDTO = {
+      id: entity.kanji.id,
+      character: entity.kanji.character,
+      level: entity.kanji.level,
+      readings: this.jsonToStringArray(entity.kanji.readings),
+      meanings: this.jsonToStringArray(entity.kanji.meanings),
+      created_at: entity.kanji.created_at,
+    };
+
+    return {
+      id: entity.id,
+      user_id: entity.user_id,
+      kanji_id: entity.kanji_id,
+      created_at: entity.created_at,
+      kanji: kanjiDTO,
+    };
+  }
+
+  /**
+   * Safely converts Json type to string array
+   * Filters out any non-string items and handles invalid data
+   *
+   * @param json - Json data from database (unknown type)
+   * @returns String array (empty if invalid)
+   */
+  private jsonToStringArray(json: unknown): string[] {
+    if (!Array.isArray(json)) {
+      return [];
+    }
+
+    return json.filter((item): item is string => typeof item === "string");
+  }
+}
