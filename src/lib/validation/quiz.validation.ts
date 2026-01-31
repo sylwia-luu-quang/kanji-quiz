@@ -212,3 +212,32 @@ export function parseSubmitAnswerParams(quizId: string, questionId: string): Sub
 export function parseSubmitAnswerBody(body: unknown): SubmitAnswerBody {
   return submitAnswerBodySchema.parse(body);
 }
+
+/**
+ * Validation schema for GET /api/quizzes/:id path parameter
+ *
+ * Validates:
+ * - id: Must be a valid positive integer string, transformed to number
+ */
+export const getQuizByIdParamsSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/, "Quiz ID must be a valid number")
+    .transform(Number)
+    .refine((val) => val > 0, {
+      message: "Quiz ID must be a positive number",
+    }),
+});
+
+export type GetQuizByIdParams = z.infer<typeof getQuizByIdParamsSchema>;
+
+/**
+ * Parses and validates path parameters for getting a quiz by ID
+ *
+ * @param id - Raw quiz ID from path parameter
+ * @returns Validated GetQuizByIdParams with transformed number ID
+ * @throws ZodError if validation fails with detailed error messages
+ */
+export function parseGetQuizByIdParams(id: string): GetQuizByIdParams {
+  return getQuizByIdParamsSchema.parse({ id });
+}

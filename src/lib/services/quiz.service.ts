@@ -824,4 +824,87 @@ export class QuizService {
   private getCorrectAnswers(questionType: QuestionType, kanjiReadings: string[], kanjiMeanings: string[]): string[] {
     return questionType === "reading" ? kanjiReadings : kanjiMeanings;
   }
+
+  /**
+   * Retrieves a single quiz by ID with complete details including all questions and kanji data
+   *
+   * Process:
+   * 1. Query quiz by ID and user_id for ownership verification
+   * 2. If not found, check if quiz exists without user filter
+   * 3. Throw appropriate error (QuizNotFoundError or QuizAccessDeniedError)
+   * 4. Query quiz_questions with JOIN to kanji table
+   * 5. Transform kanji entities to DTOs with typed arrays
+   * 6. Order questions by sequence
+   * 7. Return complete quiz with embedded questions and kanji data
+   *
+   * @param quizId - Quiz ID to retrieve
+   * @param userId - User ID for authorization
+   * @returns QuizWithQuestionsDTO with all questions and embedded kanji data
+   * @throws QuizNotFoundError if quiz doesn't exist
+   * @throws QuizAccessDeniedError if user doesn't own the quiz
+   * @throws QuizCreationError if database operation fails
+   */
+  async getQuizById(quizId: number, userId: string): Promise<QuizWithQuestionsDTO> {
+    try {
+      // Step 1: Query quiz by ID and user_id for ownership verification
+      const { data: quiz, error: quizError } = await this.supabase
+        .from("quiz")
+        .select("*")
+        .eq("id", quizId)
+        .eq("user_id", userId)
+        .single();
+
+      if (quizError || !quiz) {
+        // Step 2: Check if quiz exists at all (without user filter)
+        const { data: quizCheck, error: checkError } = await this.supabase
+          .from("quiz")
+          .select("id")
+          .eq("id", quizId)
+          .single();
+
+        if (checkError || !quizCheck) {
+          // Step 3: Quiz doesn't exist at all
+          throw new QuizNotFoundError(quizId);
+        }
+
+        // Quiz exists but user doesn't own it
+        throw new QuizAccessDeniedError(quizId, userId);
+      }
+
+      // Step 4: Query quiz_questions with JOIN to kanji table
+      const { data: questions, error: questionsError } = await this.supabase
+        .from("quiz_questions")
+        .select("*, kanji(*)")
+        .eq("quiz_id", quizId)
+        .order("sequence", { ascending: true });
+
+      if (questionsError) {
+        throw new QuizCreationError("Failed to fetch quiz questions", questionsError);
+      }
+
+      // Step 5: Transform kanji entities to DTOs
+      const questionDTOs: QuizQuestionDTO[] = (questions || []).map((q) => ({
+        ...q,
+        kanji: this.transformToKanjiDTO(q.kanji as unknown as KanjiEntity),
+      }));
+
+      // Step 6 & 7: Return complete quiz with questions ordered by sequence
+      return {
+        ...quiz,
+        questions: questionDTOs,
+      };
+    } catch (error) {
+      // Re-throw known error types
+      if (
+        error instanceof QuizNotFoundError ||
+        error instanceof QuizAccessDeniedError ||
+        error instanceof QuizCreationError
+      ) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      throw new QuizCreationError("Failed to retrieve quiz", error);
+    }
+  }
 }
