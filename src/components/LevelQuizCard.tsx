@@ -17,7 +17,7 @@ interface LevelQuizCardProps {
 }
 
 const JLPT_LEVELS: JLPTLevel[] = ["N5", "N4", "N3", "N2", "N1"];
-const QUESTION_COUNTS = [10, 20, 50] as const;
+const QUESTION_COUNTS = [1, 10, 20, 50] as const; // 1 for development
 
 export default function LevelQuizCard({ formState, onChange, onSubmit, errorMessage }: LevelQuizCardProps) {
   const isValid = formState.level !== "" && formState.questionCount !== null;
@@ -61,7 +61,7 @@ export default function LevelQuizCard({ formState, onChange, onSubmit, errorMess
           <RadioGroup
             id="question-count-radio-group"
             value={formState.questionCount?.toString() || ""}
-            onValueChange={(value) => onChange({ questionCount: parseInt(value) as 10 | 20 | 50 })}
+            onValueChange={(value) => onChange({ questionCount: parseInt(value) as 1 | 10 | 20 | 50 })}
             disabled={formState.isSubmitting}
           >
             <div className="flex gap-4">

@@ -1,0 +1,78 @@
+---
+/**
+ * Quiz Page - /quiz/[id]
+ *
+ * Dynamic route for taking a quiz. Loads quiz data server-side,
+ * validates ownership and status, then renders QuizContainer React island.
+ */
+
+import Layout from "../../layouts/Layout.astro";
+import { QuizContainer } from "../../components/QuizContainer";
+import type { QuizWithQuestionsDTO } from "../../types";
+import { QuizService } from "../../lib/services/quiz.service";
+import { defaultUserId } from "../../db/supabase.client";
+import { QuizNotFoundError, QuizAccessDeniedError } from "../../lib/errors/quiz.errors";
+
+// Disable prerendering for this dynamic route
+export const prerender = false;
+
+// Get quiz ID from URL params
+const { id } = Astro.params;
+
+// Validate quiz ID exists
+if (!id) {
+  return Astro.redirect("/dashboard");
+}
+
+// Parse quiz ID as number
+const quizId = parseInt(id, 10);
+if (isNaN(quizId) || quizId <= 0) {
+  return Astro.redirect("/dashboard");
+}
+
+// Get user ID (TODO: Extract from authenticated session)
+const userId = defaultUserId;
+
+if (!userId) {
+  // Redirect to sign-in if no user session
+  return Astro.redirect(`/signin?redirect=/quiz/${id}`);
+}
+
+// Fetch quiz data server-side
+let quiz: QuizWithQuestionsDTO;
+
+try {
+  const quizService = new QuizService(Astro.locals.supabase);
+  quiz = await quizService.getQuizById(quizId, userId);
+} catch (error) {
+  // Handle specific errors
+  if (error instanceof QuizNotFoundError) {
+    // Quiz doesn't exist - redirect to dashboard
+    return Astro.redirect("/dashboard");
+  }
+
+  if (error instanceof QuizAccessDeniedError) {
+    // User doesn't own this quiz - redirect to dashboard
+    return Astro.redirect("/dashboard");
+  }
+
+  // Other errors - redirect to dashboard with error
+  console.error("Failed to load quiz:", error);
+  return Astro.redirect("/dashboard");
+}
+
+// Additional validation: check quiz status
+if (quiz.status === "abandoned") {
+  // Cannot resume abandoned quiz - redirect to dashboard
+  return Astro.redirect("/dashboard");
+}
+
+// If quiz is already completed, show it anyway (user can review their answers)
+// The QuizContainer will handle the completed state appropriately
+
+const pageTitle = `Quiz ${quiz.id} - ${quiz.type === "level" ? `Level ${quiz.level}` : "Need Review"}`;
+---
+
+<Layout title={pageTitle}>
+  <QuizContainer client:only="react" initialQuiz={quiz} quizId={quizId} />
+</Layout>

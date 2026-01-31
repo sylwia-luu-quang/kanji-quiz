@@ -34,7 +34,7 @@ export interface DashboardViewState {
  */
 export interface LevelQuizFormState {
   level: JLPTLevel | "";
-  questionCount: 10 | 20 | 50 | null;
+  questionCount: 1 | 10 | 20 | 50 | null; // 1 for development
   isSubmitting: boolean;
 }
 
@@ -42,7 +42,7 @@ export interface LevelQuizFormState {
  * Form state for need-review quiz creation
  */
 export interface NeedReviewQuizFormState {
-  questionCount: 10 | 20 | 50 | null;
+  questionCount: 1 | 10 | 20 | 50 | null; // 1 for development
   availableCount: number;
   isSubmitting: boolean;
 }

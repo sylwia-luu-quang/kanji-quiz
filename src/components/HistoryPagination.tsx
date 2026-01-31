@@ -33,13 +33,6 @@ export default function HistoryPagination({ pagination, onChange }: HistoryPagin
     }
   };
 
-  const handleShowMore = () => {
-    onChange({
-      ...pagination,
-      limit: limit + 10,
-    });
-  };
-
   // Don't show pagination if there's no items
   if (total === 0) {
     return null;
@@ -49,15 +42,6 @@ export default function HistoryPagination({ pagination, onChange }: HistoryPagin
 
   return (
     <div className="space-y-4 border-t pt-4">
-      {/* Show More Button (if there are more items) */}
-      {hasNextPage && (
-        <div className="text-center">
-          <Button variant="outline" onClick={handleShowMore} aria-label="Show 10 more">
-            Show 10 More
-          </Button>
-        </div>
-      )}
-
       {/* Page Navigation */}
       <nav className="flex items-center justify-between" aria-label="Quiz history pagination">
         <div className="text-sm text-gray-600">

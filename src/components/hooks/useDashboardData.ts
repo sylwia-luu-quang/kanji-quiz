@@ -23,6 +23,9 @@ export function useNeedReviewList({ limit, offset }: { limit: number; offset: nu
     setLoading(true);
     setError(null);
 
+    const startTime = Date.now();
+    const minLoadingTime = 300;
+
     try {
       const response = await fetch(`/api/need-reviews?limit=${limit}&offset=${offset}`);
 
@@ -32,6 +35,12 @@ export function useNeedReviewList({ limit, offset }: { limit: number; offset: nu
       }
 
       const result: NeedReviewListResponseDTO = await response.json();
+
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+
+      await new Promise((resolve) => setTimeout(resolve, remainingTime));
+
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -60,6 +69,9 @@ export function useQuizHistory({ limit, offset }: { limit: number; offset: numbe
     setLoading(true);
     setError(null);
 
+    const startTime = Date.now();
+    const minLoadingTime = 300;
+
     try {
       const response = await fetch(`/api/quizzes?status=completed&limit=${limit}&offset=${offset}`);
 
@@ -69,6 +81,12 @@ export function useQuizHistory({ limit, offset }: { limit: number; offset: numbe
       }
 
       const result: QuizListResponseDTO = await response.json();
+
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+
+      await new Promise((resolve) => setTimeout(resolve, remainingTime));
+
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");

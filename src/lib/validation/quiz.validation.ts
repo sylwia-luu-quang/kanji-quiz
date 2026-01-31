@@ -10,11 +10,11 @@ import { z } from "zod";
  * Validates:
  * - type: Must be "level" or "need_review"
  * - level: Required for type="level", forbidden for type="need_review"
- * - question_count: Must be 10, 20, or 50 (represents number of kanji)
+ * - question_count: Must be 1, 10, 20, or 50 (represents number of kanji, 1 for development)
  */
 
 const jlptLevels = ["N5", "N4", "N3", "N2", "N1"] as const;
-const questionCounts = [10, 20, 50] as const;
+const questionCounts = [1, 10, 20, 50] as const; // Added 1 for development
 
 /**
  * Discriminated union schema for creating a quiz
@@ -29,8 +29,8 @@ export const createQuizSchema = z.discriminatedUnion("type", [
     question_count: z
       .number()
       .int()
-      .refine((val) => questionCounts.includes(val as 10 | 20 | 50), {
-        message: "Question count must be 10, 20, or 50",
+      .refine((val) => questionCounts.includes(val as 1 | 10 | 20 | 50), {
+        message: "Question count must be 1, 10, 20, or 50",
       }),
   }),
   z.object({
@@ -38,8 +38,8 @@ export const createQuizSchema = z.discriminatedUnion("type", [
     question_count: z
       .number()
       .int()
-      .refine((val) => questionCounts.includes(val as 10 | 20 | 50), {
-        message: "Question count must be 10, 20, or 50",
+      .refine((val) => questionCounts.includes(val as 1 | 10 | 20 | 50), {
+        message: "Question count must be 1, 10, 20, or 50",
       }),
   }),
 ]);

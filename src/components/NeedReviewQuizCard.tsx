@@ -14,7 +14,7 @@ interface NeedReviewQuizCardProps {
   errorMessage?: string;
 }
 
-const QUESTION_COUNTS = [10, 20, 50] as const;
+const QUESTION_COUNTS = [1, 10, 20, 50] as const; // 1 for development
 
 export default function NeedReviewQuizCard({ formState, onChange, onSubmit, errorMessage }: NeedReviewQuizCardProps) {
   const isValid =
@@ -44,7 +44,7 @@ export default function NeedReviewQuizCard({ formState, onChange, onSubmit, erro
           <RadioGroup
             id="question-count-radio-group"
             value={formState.questionCount?.toString() || ""}
-            onValueChange={(value) => onChange({ questionCount: parseInt(value) as 10 | 20 | 50 })}
+            onValueChange={(value) => onChange({ questionCount: parseInt(value) as 1 | 10 | 20 | 50 })}
             disabled={formState.isSubmitting || formState.availableCount === 0}
           >
             <div className="flex gap-4">

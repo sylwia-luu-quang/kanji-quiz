@@ -157,12 +157,10 @@ Acceptance Criteria:
 
 ID: US-011
 Title: View quiz results summary
-Description: As a user, I want to see my overall score and which kanji I missed after finishing a quiz.
+Description: As a user, I want to see my overall score after finishing a quiz.
 Acceptance Criteria:
 
-- Final screen shows score (percentage correct).
-- List of kanji indicates hit/miss.
-- Kanji can still be toggled for Need review here.
+- There is a modal showiong score (percentage correct).
 
 ID: US-012
 Title: View history list

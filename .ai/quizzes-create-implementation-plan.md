@@ -47,7 +47,7 @@ This endpoint creates a new quiz session for an authenticated user. It generates
 
 **Required:**
 - `type` (string): Must be either `"level"` or `"need_review"`
-- `question_count` (number): Number of kanji to include (valid values: 10, 20, 50)
+- `question_count` (number): Number of kanji to include (valid values: 1, 10, 20, 50; 1 for development)
 
 **Conditionally Required:**
 - `level` (string): Required when `type="level"`. Must be one of: "N5", "N4", "N3", "N2", "N1". Must be omitted when `type="need_review"`.
@@ -61,7 +61,7 @@ This endpoint creates a new quiz session for an authenticated user. It generates
 3. When `type="need_review"`:
    - `level` must not be provided
    - `question_count` must not exceed the user's need-review list size
-4. `question_count` must be a positive integer and one of [10, 20, 50]
+4. `question_count` must be a positive integer and one of [1, 10, 20, 50] (1 for development)
 5. Database must contain enough kanji to fulfill the request
 
 ## 3. Used Types
@@ -115,7 +115,7 @@ interface ErrorResponseDTO {
 import { z } from "zod";
 
 const jlptLevels = ["N5", "N4", "N3", "N2", "N1"] as const;
-const questionCounts = [10, 20, 50] as const;
+const questionCounts = [1, 10, 20, 50] as const; // 1 for development
 
 const createQuizSchema = z.discriminatedUnion("type", [
   z.object({
@@ -216,7 +216,7 @@ interface QuestionPair {
 - Invalid `level` value
 - `level` provided when `type="need_review"`
 - `level` missing when `type="level"`
-- Invalid `question_count` (not 10, 20, or 50)
+   - **Invalid `question_count` (not 1, 10, 20, or 50)**
 - `question_count` exceeds available kanji
 - Malformed JSON
 
@@ -360,7 +360,7 @@ Kanji C (id: 8):
 - **Type Safety**: Leverage TypeScript for compile-time type checking
 
 ### Resource Protection
-- **Question Count Limits**: Restrict to predefined values [10, 20, 50] to prevent resource exhaustion
+- **Question Count Limits**: Restrict to predefined values [1, 10, 20, 50] to prevent resource exhaustion (1 for development)
 - **Database Query Optimization**: Use indexes on `kanji.level` and `need_reviews.user_id`
 
 ### Data Integrity
