@@ -129,3 +129,59 @@ export class QuizAbandonmentError extends Error {
     this.name = "QuizAbandonmentError";
   }
 }
+
+/**
+ * Error thrown when a question is not found
+ */
+export class QuestionNotFoundError extends Error {
+  constructor(
+    public readonly questionId: number,
+    public readonly quizId?: number
+  ) {
+    super(
+      quizId
+        ? `Question ${questionId} not found in quiz ${quizId}`
+        : `Question ${questionId} not found`
+    );
+    this.name = "QuestionNotFoundError";
+  }
+}
+
+/**
+ * Error thrown when attempting to answer an already answered question
+ */
+export class QuestionAlreadyAnsweredError extends Error {
+  constructor(
+    public readonly questionId: number,
+    public readonly answeredAt: string
+  ) {
+    super(`Question ${questionId} has already been answered at ${answeredAt}`);
+    this.name = "QuestionAlreadyAnsweredError";
+  }
+}
+
+/**
+ * Error thrown when answer submission fails due to database or validation issues
+ */
+export class AnswerSubmissionError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
+    super(message);
+    this.name = "AnswerSubmissionError";
+  }
+}
+
+/**
+ * Error thrown when quiz is not in a valid state for answering questions
+ */
+export class QuizInvalidStateError extends Error {
+  constructor(
+    public readonly quizId: number,
+    public readonly currentStatus: string
+  ) {
+    super(`Quiz ${quizId} cannot accept answers. Current status: ${currentStatus}`);
+    this.name = "QuizInvalidStateError";
+  }
+}

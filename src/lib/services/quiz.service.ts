@@ -9,6 +9,7 @@ import type {
   KanjiEntity,
   KanjiDTO,
   QuestionType,
+  QuestionAnswerResponseDTO,
 } from "../../types";
 import {
   InsufficientKanjiError,
@@ -20,6 +21,10 @@ import {
   QuizCompletionError,
   QuizNotAbandonableError,
   QuizAbandonmentError,
+  QuestionNotFoundError,
+  QuestionAlreadyAnsweredError,
+  AnswerSubmissionError,
+  QuizInvalidStateError,
 } from "../errors/quiz.errors";
 
 /**
@@ -635,5 +640,188 @@ export class QuizService {
       // Wrap unknown errors
       throw new QuizAbandonmentError("Unexpected error during quiz abandonment", error);
     }
+  }
+
+  /**
+   * Submits an answer for a specific quiz question
+   *
+   * Process:
+   * 1. Fetch and validate quiz (ownership, status)
+   * 2. Fetch and validate question (existence, not answered)
+   * 3. Verify question belongs to quiz
+   * 4. Validate answer (case-insensitive comparison)
+   * 5. Update question record (answer, timestamp, correctness)
+   * 6. Fetch updated question with kanji data
+   * 7. Build and return response with feedback
+   *
+   * @param quizId - Quiz ID
+   * @param questionId - Question ID
+   * @param userAnswer - User's submitted answer (already trimmed)
+   * @param userId - User ID for authorization
+   * @returns QuestionAnswerResponseDTO with feedback
+   * @throws QuizNotFoundError if quiz doesn't exist
+   * @throws QuizAccessDeniedError if user doesn't own the quiz
+   * @throws QuizInvalidStateError if quiz is not in progress
+   * @throws QuestionNotFoundError if question doesn't exist or doesn't belong to quiz
+   * @throws QuestionAlreadyAnsweredError if question has already been answered
+   * @throws AnswerSubmissionError if database operation fails
+   */
+  async submitAnswer(
+    quizId: number,
+    questionId: number,
+    userAnswer: string,
+    userId: string
+  ): Promise<QuestionAnswerResponseDTO> {
+    try {
+      // Step 1: Fetch and validate quiz
+      const { data: quiz, error: quizError } = await this.supabase
+        .from("quiz")
+        .select("*")
+        .eq("id", quizId)
+        .eq("user_id", userId)
+        .single();
+
+      if (quizError || !quiz) {
+        // Check if quiz exists at all (without user filter)
+        const { data: quizCheck, error: checkError } = await this.supabase
+          .from("quiz")
+          .select("id")
+          .eq("id", quizId)
+          .single();
+
+        if (checkError || !quizCheck) {
+          throw new QuizNotFoundError(quizId);
+        }
+
+        // Quiz exists but user doesn't own it
+        throw new QuizAccessDeniedError(quizId, userId);
+      }
+
+      // Validate quiz status is 'in_progress'
+      if (quiz.status !== "in_progress") {
+        throw new QuizInvalidStateError(quizId, quiz.status);
+      }
+
+      // Step 2: Fetch question with kanji data
+      const { data: questionData, error: questionError } = await this.supabase
+        .from("quiz_questions")
+        .select("*, kanji(*)")
+        .eq("id", questionId)
+        .single();
+
+      if (questionError || !questionData) {
+        throw new QuestionNotFoundError(questionId, quizId);
+      }
+
+      // Step 3: Verify question belongs to quiz
+      if (questionData.quiz_id !== quizId) {
+        throw new QuestionNotFoundError(questionId, quizId);
+      }
+
+      // Check if already answered
+      if (questionData.user_answer !== null || questionData.answered_at !== null) {
+        throw new QuestionAlreadyAnsweredError(questionId, questionData.answered_at?.toString() || "unknown");
+      }
+
+      // Extract kanji data
+      const kanjiEntity = questionData.kanji as unknown as KanjiEntity;
+      const kanjiDTO = this.transformToKanjiDTO(kanjiEntity);
+
+      // Step 4: Validate answer
+      const isCorrect = this.validateAnswer(
+        userAnswer,
+        questionData.question_type,
+        kanjiDTO.readings,
+        kanjiDTO.meanings
+      );
+
+      // Step 5: Update question record
+      const { data: updatedQuestion, error: updateError } = await this.supabase
+        .from("quiz_questions")
+        .update({
+          user_answer: userAnswer,
+          answered_at: new Date().toISOString(),
+          is_correct: isCorrect,
+        })
+        .eq("id", questionId)
+        .select("*, kanji(*)")
+        .single();
+
+      if (updateError || !updatedQuestion) {
+        throw new AnswerSubmissionError("Failed to update question with answer", updateError);
+      }
+
+      // Step 6: Build response with feedback
+      const updatedKanjiEntity = updatedQuestion.kanji as unknown as KanjiEntity;
+      const updatedKanjiDTO = this.transformToKanjiDTO(updatedKanjiEntity);
+
+      const correctAnswers = this.getCorrectAnswers(
+        updatedQuestion.question_type,
+        updatedKanjiDTO.readings,
+        updatedKanjiDTO.meanings
+      );
+
+      const response: QuestionAnswerResponseDTO = {
+        ...updatedQuestion,
+        kanji: updatedKanjiDTO,
+        feedback: {
+          is_correct: isCorrect,
+          correct_answers: correctAnswers,
+        },
+      };
+
+      return response;
+    } catch (error) {
+      // Re-throw known error types
+      if (
+        error instanceof QuizNotFoundError ||
+        error instanceof QuizAccessDeniedError ||
+        error instanceof QuizInvalidStateError ||
+        error instanceof QuestionNotFoundError ||
+        error instanceof QuestionAlreadyAnsweredError ||
+        error instanceof AnswerSubmissionError
+      ) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      throw new AnswerSubmissionError("Unexpected error during answer submission", error);
+    }
+  }
+
+  /**
+   * Validates a user's answer against correct answers
+   *
+   * Performs case-insensitive comparison after trimming whitespace
+   *
+   * @param userAnswer - User's submitted answer (already trimmed)
+   * @param questionType - Type of question (reading or meaning)
+   * @param kanjiReadings - Array of correct readings
+   * @param kanjiMeanings - Array of correct meanings
+   * @returns true if answer matches any correct answer
+   */
+  private validateAnswer(
+    userAnswer: string,
+    questionType: QuestionType,
+    kanjiReadings: string[],
+    kanjiMeanings: string[]
+  ): boolean {
+    const normalizedUserAnswer = userAnswer.toLowerCase().trim();
+    const correctAnswers = this.getCorrectAnswers(questionType, kanjiReadings, kanjiMeanings);
+    const normalizedCorrectAnswers = correctAnswers.map((answer) => answer.toLowerCase().trim());
+
+    return normalizedCorrectAnswers.includes(normalizedUserAnswer);
+  }
+
+  /**
+   * Gets the correct answers based on question type
+   *
+   * @param questionType - Type of question (reading or meaning)
+   * @param kanjiReadings - Array of kanji readings
+   * @param kanjiMeanings - Array of kanji meanings
+   * @returns Array of correct answers for the question type
+   */
+  private getCorrectAnswers(questionType: QuestionType, kanjiReadings: string[], kanjiMeanings: string[]): string[] {
+    return questionType === "reading" ? kanjiReadings : kanjiMeanings;
   }
 }

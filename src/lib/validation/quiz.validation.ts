@@ -147,3 +147,68 @@ export type AbandonQuizParams = z.infer<typeof abandonQuizParamsSchema>;
 export function parseAbandonQuizParams(id: string): AbandonQuizParams {
   return abandonQuizParamsSchema.parse({ id });
 }
+
+/**
+ * Validation schema for PATCH /api/quizzes/:quizId/questions/:questionId path parameters
+ *
+ * Validates:
+ * - quizId: Must be a valid positive integer string, transformed to number
+ * - questionId: Must be a valid positive integer string, transformed to number
+ */
+export const submitAnswerParamsSchema = z.object({
+  quizId: z
+    .string()
+    .regex(/^\d+$/, "Quiz ID must be a valid number")
+    .transform(Number)
+    .refine((val) => val > 0, {
+      message: "Quiz ID must be a positive number",
+    }),
+  questionId: z
+    .string()
+    .regex(/^\d+$/, "Question ID must be a valid number")
+    .transform(Number)
+    .refine((val) => val > 0, {
+      message: "Question ID must be a positive number",
+    }),
+});
+
+export type SubmitAnswerParams = z.infer<typeof submitAnswerParamsSchema>;
+
+/**
+ * Validation schema for PATCH /api/quizzes/:quizId/questions/:questionId request body
+ *
+ * Validates:
+ * - user_answer: Non-empty string (1-100 characters), trimmed of whitespace
+ */
+export const submitAnswerBodySchema = z.object({
+  user_answer: z
+    .string()
+    .min(1, "Answer cannot be empty")
+    .max(100, "Answer is too long (max 100 characters)")
+    .transform((val) => val.trim()),
+});
+
+export type SubmitAnswerBody = z.infer<typeof submitAnswerBodySchema>;
+
+/**
+ * Parses and validates path parameters for answer submission
+ *
+ * @param quizId - Raw quiz ID from path parameter
+ * @param questionId - Raw question ID from path parameter
+ * @returns Validated SubmitAnswerParams with transformed number IDs
+ * @throws ZodError if validation fails with detailed error messages
+ */
+export function parseSubmitAnswerParams(quizId: string, questionId: string): SubmitAnswerParams {
+  return submitAnswerParamsSchema.parse({ quizId, questionId });
+}
+
+/**
+ * Parses and validates request body for answer submission
+ *
+ * @param body - Raw request body
+ * @returns Validated SubmitAnswerBody with trimmed user_answer
+ * @throws ZodError if validation fails with detailed error messages
+ */
+export function parseSubmitAnswerBody(body: unknown): SubmitAnswerBody {
+  return submitAnswerBodySchema.parse(body);
+}
