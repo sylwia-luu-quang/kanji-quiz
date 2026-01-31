@@ -62,3 +62,32 @@ export function parseNeedReviewQueryParams(searchParams: URLSearchParams): GetNe
 
   return GetNeedReviewQuerySchema.parse(rawParams);
 }
+
+/**
+ * Validation schema for DELETE /api/need-reviews/:kanjiId path parameter
+ *
+ * Validates:
+ * - kanjiId: Must be a positive integer (references kanji table ID)
+ */
+export const deleteNeedReviewParamsSchema = z.object({
+  kanjiId: z.coerce
+    .number({
+      required_error: "kanjiId is required",
+      invalid_type_error: "kanjiId must be a valid number",
+    })
+    .int("kanjiId must be an integer")
+    .positive("kanjiId must be a positive number"),
+});
+
+export type DeleteNeedReviewParams = z.infer<typeof deleteNeedReviewParamsSchema>;
+
+/**
+ * Parses and validates path parameter for deleting a need-review entry
+ *
+ * @param kanjiId - Raw kanjiId from URL path parameter (string)
+ * @returns Validated DeleteNeedReviewParams with numeric kanjiId
+ * @throws ZodError if validation fails with detailed error messages
+ */
+export function parseDeleteNeedReviewParams(kanjiId: string | undefined): DeleteNeedReviewParams {
+  return deleteNeedReviewParamsSchema.parse({ kanjiId });
+}

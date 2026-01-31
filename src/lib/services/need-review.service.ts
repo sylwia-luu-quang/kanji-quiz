@@ -301,6 +301,46 @@ export class NeedReviewService {
   }
 
   /**
+   * Removes a kanji from the user's need-review list (idempotent operation)
+   *
+   * This operation is idempotent - it always succeeds regardless of whether:
+   * - The kanji was successfully removed (existed in list)
+   * - The kanji was not in the user's list (already absent)
+   * - The kanji ID doesn't exist in the kanji table
+   *
+   * Process:
+   * 1. Execute DELETE query filtered by user_id AND kanji_id
+   * 2. Return success regardless of rows affected (idempotent behavior)
+   * 3. Only throw error if database operation itself fails
+   *
+   * @param userId - ID of the authenticated user
+   * @param kanjiId - ID of the kanji to remove from need-review list
+   * @throws Error if database operation fails
+   */
+  async removeNeedReview(userId: string, kanjiId: number): Promise<void> {
+    const { error } = await this.supabase
+      .from("need_reviews")
+      .delete()
+      .eq("user_id", userId)
+      .eq("kanji_id", kanjiId);
+
+    // Only throw error if database operation failed
+    // Do NOT throw error if 0 rows deleted (idempotent behavior)
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("Database error in NeedReviewService.removeNeedReview:", {
+        userId,
+        kanjiId,
+        error,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error("Failed to remove kanji from need-review list");
+    }
+
+    // Success - return void (no need to check row count)
+  }
+
+  /**
    * Safely converts Json type to string array
    * Filters out any non-string items and handles invalid data
    *
