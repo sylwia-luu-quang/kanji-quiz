@@ -89,3 +89,32 @@ export function parseGetQuizListQuery(query: URLSearchParams): GetQuizListQuery 
 
   return getQuizListQuerySchema.parse(rawParams);
 }
+
+/**
+ * Validation schema for POST /api/quizzes/:id/complete path parameter
+ *
+ * Validates:
+ * - id: Must be a valid positive integer string, transformed to number
+ */
+export const completeQuizParamsSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/, "Quiz ID must be a valid number")
+    .transform(Number)
+    .refine((val) => val > 0, {
+      message: "Quiz ID must be a positive number",
+    }),
+});
+
+export type CompleteQuizParams = z.infer<typeof completeQuizParamsSchema>;
+
+/**
+ * Parses and validates path parameters for quiz completion
+ *
+ * @param id - Raw quiz ID from path parameter
+ * @returns Validated CompleteQuizParams with transformed number ID
+ * @throws ZodError if validation fails with detailed error messages
+ */
+export function parseCompleteQuizParams(id: string): CompleteQuizParams {
+  return completeQuizParamsSchema.parse({ id });
+}

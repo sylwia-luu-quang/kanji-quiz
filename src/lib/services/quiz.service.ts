@@ -10,7 +10,15 @@ import type {
   KanjiDTO,
   QuestionType,
 } from "../../types";
-import { InsufficientKanjiError, QuizCreationError } from "../errors/quiz.errors";
+import {
+  InsufficientKanjiError,
+  QuizCreationError,
+  QuizNotFoundError,
+  QuizAccessDeniedError,
+  QuizAlreadyCompletedError,
+  IncompleteQuizError,
+  QuizCompletionError,
+} from "../errors/quiz.errors";
 
 /**
  * Parameters for creating a quiz
@@ -431,6 +439,119 @@ export class QuizService {
       };
     } catch (error) {
       throw new QuizCreationError("Failed to retrieve quiz list", error);
+    }
+  }
+
+  /**
+   * Completes a quiz after all questions have been answered
+   *
+   * Process:
+   * 1. Fetch quiz record and verify ownership
+   * 2. Verify quiz is in completable state (status = 'in_progress')
+   * 3. Fetch all questions and verify all are answered
+   * 4. Calculate score percentage based on correct answers
+   * 5. Update quiz with completion data (status, score, completed_at)
+   * 6. Return updated quiz
+   *
+   * @param quizId - Quiz ID to complete
+   * @param userId - User ID for authorization
+   * @returns QuizDTO with completion data
+   * @throws QuizNotFoundError if quiz doesn't exist
+   * @throws QuizAccessDeniedError if user doesn't own the quiz
+   * @throws QuizAlreadyCompletedError if quiz is already completed
+   * @throws IncompleteQuizError if not all questions are answered
+   * @throws QuizCompletionError if database operation fails
+   */
+  async completeQuiz(quizId: number, userId: string): Promise<QuizDTO> {
+    try {
+      // Step 1: Fetch quiz and verify ownership
+      const { data: quiz, error: quizError } = await this.supabase
+        .from("quiz")
+        .select("*")
+        .eq("id", quizId)
+        .eq("user_id", userId)
+        .single();
+
+      if (quizError || !quiz) {
+        // Check if quiz exists at all (without user filter)
+        const { data: quizCheck, error: checkError } = await this.supabase
+          .from("quiz")
+          .select("id")
+          .eq("id", quizId)
+          .single();
+
+        if (checkError || !quizCheck) {
+          throw new QuizNotFoundError(quizId);
+        }
+
+        // Quiz exists but user doesn't own it
+        throw new QuizAccessDeniedError(quizId, userId);
+      }
+
+      // Step 2: Verify quiz is in completable state
+      if (quiz.status === "completed") {
+        throw new QuizAlreadyCompletedError(
+          quizId,
+          quiz.completed_at?.toString() || "",
+          Number(quiz.score_percent) || 0
+        );
+      }
+
+      // Step 3: Fetch questions and verify all are answered
+      const { data: questionsStats, error: statsError } = await this.supabase
+        .from("quiz_questions")
+        .select("user_answer, is_correct")
+        .eq("quiz_id", quizId);
+
+      if (statsError) {
+        throw new QuizCompletionError("Failed to fetch quiz questions", statsError);
+      }
+
+      const questions = questionsStats || [];
+      const totalQuestions = questions.length;
+      const answeredQuestions = questions.filter((q) => q.user_answer !== null).length;
+
+      if (answeredQuestions < totalQuestions) {
+        throw new IncompleteQuizError(totalQuestions, answeredQuestions);
+      }
+
+      // Step 4: Calculate score percentage
+      const correctAnswers = questions.filter((q) => q.is_correct === true).length;
+      const scorePercent = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+      const roundedScore = Number(scorePercent.toFixed(2));
+
+      // Step 5: Update quiz with completion data
+      const { data: updatedQuiz, error: updateError } = await this.supabase
+        .from("quiz")
+        .update({
+          status: "completed",
+          score_percent: roundedScore,
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", quizId)
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+      if (updateError || !updatedQuiz) {
+        throw new QuizCompletionError("Failed to update quiz completion status", updateError);
+      }
+
+      return updatedQuiz;
+    } catch (error) {
+      // Re-throw known error types
+      if (
+        error instanceof QuizNotFoundError ||
+        error instanceof QuizAccessDeniedError ||
+        error instanceof QuizAlreadyCompletedError ||
+        error instanceof IncompleteQuizError ||
+        error instanceof QuizCompletionError
+      ) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      throw new QuizCompletionError("Unexpected error during quiz completion", error);
     }
   }
 }

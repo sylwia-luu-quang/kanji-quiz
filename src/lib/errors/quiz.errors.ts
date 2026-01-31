@@ -39,3 +39,66 @@ export class QuizCreationError extends Error {
     this.name = "QuizCreationError";
   }
 }
+
+/**
+ * Error thrown when a quiz is not found
+ */
+export class QuizNotFoundError extends Error {
+  constructor(public readonly quizId: number) {
+    super(`Quiz not found with id: ${quizId}`);
+    this.name = "QuizNotFoundError";
+  }
+}
+
+/**
+ * Error thrown when a user doesn't have permission to access a quiz
+ */
+export class QuizAccessDeniedError extends Error {
+  constructor(
+    public readonly quizId: number,
+    public readonly userId: string
+  ) {
+    super(`User ${userId} does not have permission to access quiz ${quizId}`);
+    this.name = "QuizAccessDeniedError";
+  }
+}
+
+/**
+ * Error thrown when attempting to complete an already completed quiz
+ */
+export class QuizAlreadyCompletedError extends Error {
+  constructor(
+    public readonly quizId: number,
+    public readonly completedAt: string,
+    public readonly scorePercent: number
+  ) {
+    super(`Quiz ${quizId} is already completed`);
+    this.name = "QuizAlreadyCompletedError";
+  }
+}
+
+/**
+ * Error thrown when attempting to complete a quiz with unanswered questions
+ */
+export class IncompleteQuizError extends Error {
+  constructor(
+    public readonly totalQuestions: number,
+    public readonly answeredQuestions: number
+  ) {
+    super(`Cannot complete quiz. ${answeredQuestions} of ${totalQuestions} questions answered.`);
+    this.name = "IncompleteQuizError";
+  }
+}
+
+/**
+ * Error thrown when quiz completion fails due to database or transaction issues
+ */
+export class QuizCompletionError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
+    super(message);
+    this.name = "QuizCompletionError";
+  }
+}
