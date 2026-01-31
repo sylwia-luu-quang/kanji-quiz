@@ -118,3 +118,32 @@ export type CompleteQuizParams = z.infer<typeof completeQuizParamsSchema>;
 export function parseCompleteQuizParams(id: string): CompleteQuizParams {
   return completeQuizParamsSchema.parse({ id });
 }
+
+/**
+ * Validation schema for PATCH /api/quizzes/:id/abandon path parameter
+ *
+ * Validates:
+ * - id: Must be a valid positive integer string, transformed to number
+ */
+export const abandonQuizParamsSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/, "Quiz ID must be a valid number")
+    .transform(Number)
+    .refine((val) => val > 0, {
+      message: "Quiz ID must be a positive number",
+    }),
+});
+
+export type AbandonQuizParams = z.infer<typeof abandonQuizParamsSchema>;
+
+/**
+ * Parses and validates path parameters for quiz abandonment
+ *
+ * @param id - Raw quiz ID from path parameter
+ * @returns Validated AbandonQuizParams with transformed number ID
+ * @throws ZodError if validation fails with detailed error messages
+ */
+export function parseAbandonQuizParams(id: string): AbandonQuizParams {
+  return abandonQuizParamsSchema.parse({ id });
+}

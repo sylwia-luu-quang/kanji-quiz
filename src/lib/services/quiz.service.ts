@@ -18,6 +18,8 @@ import {
   QuizAlreadyCompletedError,
   IncompleteQuizError,
   QuizCompletionError,
+  QuizNotAbandonableError,
+  QuizAbandonmentError,
 } from "../errors/quiz.errors";
 
 /**
@@ -552,6 +554,86 @@ export class QuizService {
 
       // Wrap unknown errors
       throw new QuizCompletionError("Unexpected error during quiz completion", error);
+    }
+  }
+
+  /**
+   * Abandons an in-progress quiz
+   *
+   * Process:
+   * 1. Fetch quiz and verify ownership
+   * 2. Verify quiz is in abandonable state (status = 'in_progress')
+   * 3. Update quiz status to 'abandoned'
+   * 4. Return updated quiz
+   *
+   * @param quizId - Quiz ID to abandon
+   * @param userId - User ID for authorization
+   * @returns QuizDTO with updated status
+   * @throws QuizNotFoundError if quiz doesn't exist
+   * @throws QuizAccessDeniedError if user doesn't own the quiz
+   * @throws QuizNotAbandonableError if quiz is already completed or abandoned
+   * @throws QuizAbandonmentError if database operation fails
+   */
+  async abandonQuiz(quizId: number, userId: string): Promise<QuizDTO> {
+    try {
+      // Step 1: Fetch quiz and verify ownership
+      const { data: quiz, error: quizError } = await this.supabase
+        .from("quiz")
+        .select("*")
+        .eq("id", quizId)
+        .eq("user_id", userId)
+        .single();
+
+      if (quizError || !quiz) {
+        // Check if quiz exists at all (without user filter)
+        const { data: quizCheck, error: checkError } = await this.supabase
+          .from("quiz")
+          .select("id")
+          .eq("id", quizId)
+          .single();
+
+        if (checkError || !quizCheck) {
+          throw new QuizNotFoundError(quizId);
+        }
+
+        // Quiz exists but user doesn't own it
+        throw new QuizAccessDeniedError(quizId, userId);
+      }
+
+      // Step 2: Verify quiz is in abandonable state
+      if (quiz.status !== "in_progress") {
+        throw new QuizNotAbandonableError(quizId, quiz.status);
+      }
+
+      // Step 3: Update quiz status to 'abandoned'
+      const { data: updatedQuiz, error: updateError } = await this.supabase
+        .from("quiz")
+        .update({
+          status: "abandoned",
+        })
+        .eq("id", quizId)
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+      if (updateError || !updatedQuiz) {
+        throw new QuizAbandonmentError("Failed to update quiz abandonment status", updateError);
+      }
+
+      return updatedQuiz;
+    } catch (error) {
+      // Re-throw known error types
+      if (
+        error instanceof QuizNotFoundError ||
+        error instanceof QuizAccessDeniedError ||
+        error instanceof QuizNotAbandonableError ||
+        error instanceof QuizAbandonmentError
+      ) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      throw new QuizAbandonmentError("Unexpected error during quiz abandonment", error);
     }
   }
 }

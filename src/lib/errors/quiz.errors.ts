@@ -102,3 +102,30 @@ export class QuizCompletionError extends Error {
     this.name = "QuizCompletionError";
   }
 }
+
+/**
+ * Error thrown when attempting to abandon a quiz that cannot be abandoned
+ * (quiz is already completed or abandoned)
+ */
+export class QuizNotAbandonableError extends Error {
+  constructor(
+    public readonly quizId: number,
+    public readonly currentStatus: string
+  ) {
+    super(`Quiz ${quizId} cannot be abandoned. Current status: ${currentStatus}`);
+    this.name = "QuizNotAbandonableError";
+  }
+}
+
+/**
+ * Error thrown when quiz abandonment fails due to database or transaction issues
+ */
+export class QuizAbandonmentError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
+    super(message);
+    this.name = "QuizAbandonmentError";
+  }
+}
