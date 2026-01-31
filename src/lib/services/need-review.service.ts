@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "../../db/supabase.client";
-import type { NeedReviewDTO, KanjiDTO, KanjiEntity, NeedReviewEntity } from "../../types";
+import type { NeedReviewDTO, KanjiDTO, KanjiEntity, NeedReviewEntity, NeedReviewListResponseDTO } from "../../types";
 import { KanjiNotFoundError, NeedReviewCreationError } from "../errors/need-review.errors";
 
 /**
@@ -9,6 +9,14 @@ import { KanjiNotFoundError, NeedReviewCreationError } from "../errors/need-revi
 export interface AddNeedReviewResult {
   needReview: NeedReviewDTO;
   isNewEntry: boolean;
+}
+
+/**
+ * Parameters for fetching need-review list
+ */
+export interface GetNeedReviewListParams {
+  limit: number;
+  offset: number;
 }
 
 /**
@@ -24,6 +32,96 @@ interface NeedReviewWithKanji extends NeedReviewEntity {
  */
 export class NeedReviewService {
   constructor(private supabase: SupabaseClient) {}
+
+  /**
+   * Retrieves a paginated list of user's need-review entries with embedded kanji details
+   *
+   * Process:
+   * 1. First get total count for the user
+   * 2. If offset >= total, return empty array (valid pagination edge case)
+   * 3. Query need_reviews table filtered by user_id
+   * 4. JOIN with kanji table to get complete kanji details
+   * 5. Apply pagination (limit, offset)
+   * 6. Order by created_at DESC (most recent first)
+   * 7. Transform results to DTOs
+   *
+   * @param userId - ID of the authenticated user
+   * @param params - Pagination parameters (limit, offset)
+   * @returns NeedReviewListResponseDTO with data and pagination metadata
+   * @throws Error if database query fails
+   */
+  async getNeedReviewList(userId: string, params: GetNeedReviewListParams): Promise<NeedReviewListResponseDTO> {
+    const { limit, offset } = params;
+
+    // First, get the total count
+    const { count: totalCount, error: countError } = await this.supabase
+      .from("need_reviews")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (countError) {
+      // eslint-disable-next-line no-console
+      console.error("Database error in NeedReviewService.getNeedReviewList (count):", countError);
+      throw new Error("Failed to retrieve need-review list");
+    }
+
+    const total = totalCount || 0;
+
+    // If offset is beyond total, return empty result (valid pagination edge case)
+    if (offset >= total && total > 0) {
+      return {
+        data: [],
+        pagination: {
+          total,
+          limit,
+          offset,
+        },
+      };
+    }
+
+    // Build query with JOIN to kanji table
+    const { data, error } = await this.supabase
+      .from("need_reviews")
+      .select(
+        `
+        id,
+        user_id,
+        kanji_id,
+        created_at,
+        kanji:kanji_id (
+          id,
+          character,
+          level,
+          readings,
+          meanings,
+          created_at
+        )
+      `
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    // Handle database errors
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("Database error in NeedReviewService.getNeedReviewList:", error);
+      throw new Error("Failed to retrieve need-review list");
+    }
+
+    // Transform entities to DTOs
+    const needReviewDTOs = (data || []).map((item) => this.transformToNeedReviewDTO(item as NeedReviewWithKanji));
+
+    // Build response with pagination metadata
+    return {
+      data: needReviewDTOs,
+      pagination: {
+        total,
+        limit,
+        offset,
+      },
+    };
+  }
 
   /**
    * Adds a kanji to the user's need-review list (idempotent operation)
