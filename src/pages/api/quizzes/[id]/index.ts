@@ -5,7 +5,7 @@ import { parseGetQuizByIdParams } from "../../../../lib/validation/quiz.validati
 import { QuizService } from "../../../../lib/services/quiz.service";
 import { QuizNotFoundError, QuizAccessDeniedError, QuizCreationError } from "../../../../lib/errors/quiz.errors";
 import type { ErrorResponseDTO } from "../../../../types";
-import { defaultUserId } from "../../../../db/supabase.client";
+import { DEFAULT_USER_ID } from "../../../../db/supabase.client";
 
 /**
  * GET /api/quizzes/:id
@@ -79,7 +79,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
 
     // TODO: Extract user_id from authenticated session
     // For development: use default user ID
-    const userId = defaultUserId;
+    const userId = DEFAULT_USER_ID;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {

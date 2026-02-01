@@ -5,7 +5,7 @@ import { parseCreateQuizBody, parseGetQuizListQuery } from "../../../lib/validat
 import { QuizService } from "../../../lib/services/quiz.service";
 import { InsufficientKanjiError, QuizCreationError } from "../../../lib/errors/quiz.errors";
 import type { ErrorResponseDTO, QuizListResponseDTO } from "../../../types";
-import { defaultUserId } from "../../../db/supabase.client";
+import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 /**
  * POST /api/quizzes
@@ -46,7 +46,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // TODO: Extract user_id from authenticated session
     // For development: use default user ID
-    const userId = defaultUserId;
+    const userId = DEFAULT_USER_ID;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
@@ -171,7 +171,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     // TODO: Extract user_id from authenticated session
     // For development: use default user ID
-    const userId = defaultUserId;
+    const userId = DEFAULT_USER_ID;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {

@@ -12,7 +12,7 @@ import {
   AnswerSubmissionError,
 } from "../../../../../lib/errors/quiz.errors";
 import type { ErrorResponseDTO } from "../../../../../types";
-import { defaultUserId } from "../../../../../db/supabase.client";
+import { DEFAULT_USER_ID } from "../../../../../db/supabase.client";
 
 /**
  * PATCH /api/quizzes/:quizId/questions/:questionId
@@ -84,7 +84,7 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
 
     // TODO: Extract user_id from authenticated session
     // For development: use default user ID
-    const userId = defaultUserId;
+    const userId = DEFAULT_USER_ID;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {

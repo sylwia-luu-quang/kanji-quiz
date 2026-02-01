@@ -10,7 +10,7 @@ import Layout from "../../layouts/Layout.astro";
 import { QuizContainer } from "../../components/QuizContainer";
 import type { QuizWithQuestionsDTO } from "../../types";
 import { QuizService } from "../../lib/services/quiz.service";
-import { defaultUserId } from "../../db/supabase.client";
+import { DEFAULT_USER_ID } from "../../db/supabase.client";
 import { QuizNotFoundError, QuizAccessDeniedError } from "../../lib/errors/quiz.errors";
 
 // Disable prerendering for this dynamic route
@@ -31,7 +31,7 @@ if (isNaN(quizId) || quizId <= 0) {
 }
 
 // Get user ID (TODO: Extract from authenticated session)
-const userId = defaultUserId;
+const userId = DEFAULT_USER_ID;
 
 if (!userId) {
   // Redirect to sign-in if no user session

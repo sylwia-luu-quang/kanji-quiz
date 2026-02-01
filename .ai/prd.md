@@ -75,6 +75,7 @@ Acceptance Criteria:
 - Password is hashed and stored securely.
 - Successful registration redirects to the home screen.
 - Errors (email already in use, weak password) are displayed.
+- All of the functionality of this app is available only to authenticated users
 
 ID: US-002
 Title: Sign in

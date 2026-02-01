@@ -5,7 +5,7 @@ import { parseAddNeedReviewBody, parseNeedReviewQueryParams } from "../../../lib
 import { NeedReviewService } from "../../../lib/services/need-review.service";
 import { KanjiNotFoundError, NeedReviewCreationError } from "../../../lib/errors/need-review.errors";
 import type { ErrorResponseDTO } from "../../../types";
-import { defaultUserId } from "../../../db/supabase.client";
+import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 /**
  * GET /api/need-reviews
@@ -55,7 +55,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     // TODO: Extract user_id from authenticated session
     // For development: use default user ID
-    const userId = defaultUserId;
+    const userId = DEFAULT_USER_ID;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
@@ -164,7 +164,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // TODO: Extract user_id from authenticated session
     // For development: use default user ID
-    const userId = defaultUserId;
+    const userId = DEFAULT_USER_ID;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {

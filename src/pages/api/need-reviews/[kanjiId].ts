@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import { parseDeleteNeedReviewParams } from "../../../lib/validation/need-review.validation";
 import { NeedReviewService } from "../../../lib/services/need-review.service";
 import type { ErrorResponseDTO } from "../../../types";
-import { defaultUserId } from "../../../db/supabase.client";
+import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 /**
  * DELETE /api/need-reviews/:kanjiId
@@ -39,7 +39,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // TODO: Extract user_id from authenticated session
     // For development: use default user ID
-    const userId = defaultUserId;
+    const userId = DEFAULT_USER_ID;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {

@@ -318,11 +318,7 @@ export class NeedReviewService {
    * @throws Error if database operation fails
    */
   async removeNeedReview(userId: string, kanjiId: number): Promise<void> {
-    const { error } = await this.supabase
-      .from("need_reviews")
-      .delete()
-      .eq("user_id", userId)
-      .eq("kanji_id", kanjiId);
+    const { error } = await this.supabase.from("need_reviews").delete().eq("user_id", userId).eq("kanji_id", kanjiId);
 
     // Only throw error if database operation failed
     // Do NOT throw error if 0 rows deleted (idempotent behavior)
