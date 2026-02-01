@@ -11,11 +11,7 @@ interface ScoreSummaryProps {
   totalCount: number;
 }
 
-export function ScoreSummary({
-  scorePercent,
-  correctCount,
-  totalCount,
-}: ScoreSummaryProps) {
+export function ScoreSummary({ scorePercent, correctCount, totalCount }: ScoreSummaryProps) {
   const getScoreColor = () => {
     if (scorePercent >= 80) return "text-green-600 dark:text-green-400";
     if (scorePercent >= 50) return "text-yellow-600 dark:text-yellow-400";
@@ -24,9 +20,7 @@ export function ScoreSummary({
 
   return (
     <div className="space-y-4 text-center">
-      <div className={`text-6xl font-bold ${getScoreColor()}`}>
-        {scorePercent}%
-      </div>
+      <div className={`text-6xl font-bold ${getScoreColor()}`}>{scorePercent}%</div>
       <div className="text-lg text-neutral-700 dark:text-neutral-300">
         {correctCount} out of {totalCount} correct
       </div>

@@ -49,9 +49,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <AlertCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-red-900 dark:text-red-100">
-                Something went wrong
-              </h2>
+              <h2 className="text-xl font-semibold text-red-900 dark:text-red-100">Something went wrong</h2>
               <p className="text-sm text-red-800 dark:text-red-200">
                 {this.state.error.message || "An unexpected error occurred"}
               </p>
@@ -60,9 +58,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <Button onClick={this.reset} variant="outline">
                 Try Again
               </Button>
-              <Button onClick={() => (window.location.href = "/dashboard")}>
-                Return to Dashboard
-              </Button>
+              <Button onClick={() => (window.location.href = "/dashboard")}>Return to Dashboard</Button>
             </div>
           </div>
         </div>

@@ -4,12 +4,7 @@
  * Modal shown after completion with score, encouragement, and return button
  */
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScoreSummary } from "./ScoreSummary";
 import { ReturnToDashboardButton } from "./ReturnToDashboardButton";
 
@@ -38,15 +33,9 @@ export function CompletionModal({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          <ScoreSummary
-            scorePercent={scorePercent}
-            correctCount={correctCount}
-            totalCount={totalCount}
-          />
+          <ScoreSummary scorePercent={scorePercent} correctCount={correctCount} totalCount={totalCount} />
 
-          <p className="text-center text-base text-neutral-700 dark:text-neutral-300">
-            {encouragementMessage}
-          </p>
+          <p className="text-center text-base text-neutral-700 dark:text-neutral-300">{encouragementMessage}</p>
 
           <ReturnToDashboardButton onClick={onReturnToDashboard} />
         </div>

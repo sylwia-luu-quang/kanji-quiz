@@ -12,10 +12,7 @@ interface NeedReviewToggleProps {
   onChange: (newState: boolean) => Promise<void>;
 }
 
-export function NeedReviewToggle({
-  isMarked,
-  onChange,
-}: NeedReviewToggleProps) {
+export function NeedReviewToggle({ isMarked, onChange }: NeedReviewToggleProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,12 +37,7 @@ export function NeedReviewToggle({
           aria-label="Mark this kanji for review"
         />
         <span>Mark for review</span>
-        {isLoading && (
-          <Loader2
-            className="h-4 w-4 animate-spin text-neutral-500"
-            aria-hidden="true"
-          />
-        )}
+        {isLoading && <Loader2 className="h-4 w-4 animate-spin text-neutral-500" aria-hidden="true" />}
       </label>
     </div>
   );

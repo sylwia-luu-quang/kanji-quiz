@@ -22,7 +22,7 @@ export class ApiError extends Error {
     message: string,
     public readonly code?: string,
     public readonly statusCode?: number,
-    public readonly details?: Record<string, unknown>,
+    public readonly details?: Record<string, unknown>
   ) {
     super(message);
     this.name = "ApiError";
@@ -48,12 +48,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 
   if (!response.ok) {
     const errorData = data as AuthErrorResponseDTO;
-    throw new ApiError(
-      errorData.error,
-      errorData.code,
-      response.status,
-      errorData.details,
-    );
+    throw new ApiError(errorData.error, errorData.code, response.status, errorData.details);
   }
 
   return data as SignInResponseDTO;
@@ -63,11 +58,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
  * Sign up a new user
  * @throws ApiError on failure
  */
-export async function signUp(
-  email: string,
-  password: string,
-  confirmPassword: string,
-): Promise<SignUpResponseDTO> {
+export async function signUp(email: string, password: string, confirmPassword: string): Promise<SignUpResponseDTO> {
   const payload: SignUpCommandDTO = { email, password, confirmPassword };
 
   const response = await fetch("/api/auth/signup", {
@@ -82,12 +73,7 @@ export async function signUp(
 
   if (!response.ok) {
     const errorData = data as AuthErrorResponseDTO;
-    throw new ApiError(
-      errorData.error,
-      errorData.code,
-      response.status,
-      errorData.details,
-    );
+    throw new ApiError(errorData.error, errorData.code, response.status, errorData.details);
   }
 
   return data as SignUpResponseDTO;
@@ -127,12 +113,7 @@ export async function getSession(): Promise<SessionResponseDTO> {
 
   if (!response.ok) {
     const errorData = data as AuthErrorResponseDTO;
-    throw new ApiError(
-      errorData.error,
-      errorData.code,
-      response.status,
-      errorData.details,
-    );
+    throw new ApiError(errorData.error, errorData.code, response.status, errorData.details);
   }
 
   return data as SessionResponseDTO;

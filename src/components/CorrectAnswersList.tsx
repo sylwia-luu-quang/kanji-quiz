@@ -8,9 +8,7 @@ interface CorrectAnswersListProps {
   correctAnswers: string[];
 }
 
-export function CorrectAnswersList({
-  correctAnswers,
-}: CorrectAnswersListProps) {
+export function CorrectAnswersList({ correctAnswers }: CorrectAnswersListProps) {
   if (correctAnswers.length === 0) {
     return null;
   }
@@ -22,10 +20,7 @@ export function CorrectAnswersList({
       </h3>
       <ul className="space-y-1">
         {correctAnswers.map((answer, index) => (
-          <li
-            key={index}
-            className="text-base text-neutral-900 dark:text-neutral-100"
-          >
+          <li key={index} className="text-base text-neutral-900 dark:text-neutral-100">
             {answer}
           </li>
         ))}

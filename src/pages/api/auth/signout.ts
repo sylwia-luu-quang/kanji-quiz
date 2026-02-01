@@ -54,7 +54,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Note: Signout should always succeed gracefully
     // eslint-disable-next-line no-console
     console.error("[POST /api/auth/signout] Unexpected error:", error);
-    
+
     // Return success anyway to ensure user can always sign out
     return new Response(
       JSON.stringify({

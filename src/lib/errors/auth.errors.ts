@@ -50,9 +50,7 @@ export class InvalidCredentialsError extends AuthError {
  * HTTP Status: 400 Bad Request
  */
 export class WeakPasswordError extends AuthError {
-  constructor(
-    message = "Password must be at least 8 characters and contain uppercase, lowercase, and number",
-  ) {
+  constructor(message = "Password must be at least 8 characters and contain uppercase, lowercase, and number") {
     super(message, "WEAK_PASSWORD", 400);
     this.name = "WeakPasswordError";
     Object.setPrototypeOf(this, WeakPasswordError.prototype);
@@ -88,7 +86,10 @@ export class AuthenticationRequiredError extends AuthError {
  * HTTP Status: 500 Internal Server Error
  */
 export class AuthServiceError extends AuthError {
-  constructor(message = "Authentication service error", public readonly originalError?: unknown) {
+  constructor(
+    message = "Authentication service error",
+    public readonly originalError?: unknown
+  ) {
     super(message, "AUTH_SERVICE_ERROR", 500);
     this.name = "AuthServiceError";
     Object.setPrototypeOf(this, AuthServiceError.prototype);

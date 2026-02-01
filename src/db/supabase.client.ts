@@ -36,20 +36,15 @@ function parseCookieHeader(cookieHeader: string): { name: string; value: string 
  * Create a Supabase server client with SSR cookie handling
  * Use this for authentication operations in Astro pages and API routes
  */
-export const createSupabaseServerInstance = (context: {
-  headers: Headers;
-  cookies: AstroCookies;
-}) => {
+export const createSupabaseServerInstance = (context: { headers: Headers; cookies: AstroCookies }) => {
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookieOptions,
     cookies: {
       getAll() {
         return parseCookieHeader(context.headers.get("Cookie") ?? "");
       },
-      setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptionsWithName }>) {
-        cookiesToSet.forEach(({ name, value, options }) =>
-          context.cookies.set(name, value, options),
-        );
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptionsWithName }[]) {
+        cookiesToSet.forEach(({ name, value, options }) => context.cookies.set(name, value, options));
       },
     },
   });

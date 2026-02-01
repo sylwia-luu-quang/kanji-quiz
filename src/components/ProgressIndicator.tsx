@@ -9,10 +9,7 @@ interface ProgressIndicatorProps {
   totalQuestions: number;
 }
 
-export function ProgressIndicator({
-  currentQuestionIndex,
-  totalQuestions,
-}: ProgressIndicatorProps) {
+export function ProgressIndicator({ currentQuestionIndex, totalQuestions }: ProgressIndicatorProps) {
   const current = currentQuestionIndex + 1;
   const percentComplete = Math.round((current / totalQuestions) * 100);
 

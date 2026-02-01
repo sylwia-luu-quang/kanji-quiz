@@ -49,14 +49,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
           id: user.id,
           email: user.email!,
         };
-        
+
         // Get session for expiry info
-        const { data: { session } } = await context.locals.supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await context.locals.supabase.auth.getSession();
         context.locals.session = session;
       } else {
         context.locals.user = null;
         context.locals.session = null;
-        
+
         // Redirect to signin for protected routes
         return context.redirect(`/auth/signin?redirect=${encodeURIComponent(context.url.pathname)}`);
       }
@@ -64,7 +66,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       console.error("[Middleware] Unexpected error checking session:", error);
       context.locals.user = null;
       context.locals.session = null;
-      
+
       // Redirect to signin on error
       return context.redirect(`/auth/signin?redirect=${encodeURIComponent(context.url.pathname)}`);
     }
@@ -80,8 +82,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
           id: user.id,
           email: user.email!,
         };
-        
-        const { data: { session } } = await context.locals.supabase.auth.getSession();
+
+        const {
+          data: { session },
+        } = await context.locals.supabase.auth.getSession();
         context.locals.session = session;
       } else {
         context.locals.user = null;

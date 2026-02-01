@@ -11,9 +11,7 @@ interface ReturnToDashboardButtonProps {
   onClick: () => void;
 }
 
-export function ReturnToDashboardButton({
-  onClick,
-}: ReturnToDashboardButtonProps) {
+export function ReturnToDashboardButton({ onClick }: ReturnToDashboardButtonProps) {
   return (
     <Button onClick={onClick} className="w-full" size="lg">
       <Home className="mr-2 h-5 w-5" aria-hidden="true" />

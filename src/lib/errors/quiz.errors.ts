@@ -138,11 +138,7 @@ export class QuestionNotFoundError extends Error {
     public readonly questionId: number,
     public readonly quizId?: number
   ) {
-    super(
-      quizId
-        ? `Question ${questionId} not found in quiz ${quizId}`
-        : `Question ${questionId} not found`
-    );
+    super(quizId ? `Question ${questionId} not found in quiz ${quizId}` : `Question ${questionId} not found`);
     this.name = "QuestionNotFoundError";
   }
 }
