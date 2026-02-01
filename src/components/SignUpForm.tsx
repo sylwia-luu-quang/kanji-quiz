@@ -82,7 +82,6 @@ export default function SignUpForm({ redirectTo = "/dashboard" }: SignUpFormProp
           },
         };
 
-        // Clear confirm password error if password changes
         if (field === "password" && prev.errors.confirmPassword) {
           newState.errors.confirmPassword = undefined;
         }
@@ -100,7 +99,6 @@ export default function SignUpForm({ redirectTo = "/dashboard" }: SignUpFormProp
     }));
   }, []);
 
-  // Check if form is valid for submit button state
   const isFormValid = useCallback(() => {
     if (!formState.email || !formState.password || !formState.confirmPassword) {
       return false;
@@ -122,7 +120,6 @@ export default function SignUpForm({ redirectTo = "/dashboard" }: SignUpFormProp
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      // Validate inputs
       const emailError = validateEmail(formState.email);
       const passwordError = validatePassword(formState.password);
       const confirmPasswordError = validateConfirmPassword(formState.confirmPassword, formState.password);
@@ -139,20 +136,15 @@ export default function SignUpForm({ redirectTo = "/dashboard" }: SignUpFormProp
         return;
       }
 
-      // Set submitting state
       setFormState((prev) => ({ ...prev, isSubmitting: true, errors: {} }));
 
       try {
-        // Call sign-up API
         await signUp(formState.email, formState.password, formState.confirmPassword);
 
-        // Auto-login after successful registration
         await signIn(formState.email, formState.password);
 
-        // Redirect to dashboard or specified page
         window.location.href = redirectTo;
       } catch (error) {
-        // Handle API errors
         if (error instanceof ApiError) {
           const errorResponse: AuthErrorResponseDTO = {
             error: error.message,
@@ -160,7 +152,6 @@ export default function SignUpForm({ redirectTo = "/dashboard" }: SignUpFormProp
             details: error.details,
           };
 
-          // Check for field-specific errors
           if (errorResponse.code === "VALIDATION_ERROR" && errorResponse.details?.field) {
             const field = errorResponse.details.field as string;
             setFormState((prev) => ({
@@ -172,7 +163,6 @@ export default function SignUpForm({ redirectTo = "/dashboard" }: SignUpFormProp
               },
             }));
           } else {
-            // Show form-level error with user-friendly message
             setFormState((prev) => ({
               ...prev,
               isSubmitting: false,
@@ -182,7 +172,6 @@ export default function SignUpForm({ redirectTo = "/dashboard" }: SignUpFormProp
             }));
           }
         } else {
-          // Handle unexpected errors (silently in production, logged for debugging)
           if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console
             console.error("Unexpected sign-up error:", error);

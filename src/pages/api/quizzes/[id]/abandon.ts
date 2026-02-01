@@ -50,7 +50,6 @@ import type { ErrorResponseDTO } from "../../../../types";
  */
 export const PATCH: APIRoute = async ({ params, locals }) => {
   try {
-    // Extract and validate quiz ID from path parameter
     const validatedParams = parseAbandonQuizParams(params.id || "");
     const quizId = validatedParams.id;
 

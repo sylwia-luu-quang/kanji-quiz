@@ -28,16 +28,12 @@ import type { ErrorResponseDTO } from "../../../types";
  */
 export const GET: APIRoute = async ({ locals, url }) => {
   try {
-    // Validate query parameters
     const queryParams = parseKanjiQueryParams(url.searchParams);
 
-    // Initialize service
     const kanjiService = new KanjiService(locals.supabase);
 
-    // Fetch kanji data
     const result = await kanjiService.getKanji(queryParams);
 
-    // Return success response
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: {
@@ -45,7 +41,6 @@ export const GET: APIRoute = async ({ locals, url }) => {
       },
     });
   } catch (error) {
-    // Handle validation errors
     if (error instanceof ZodError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Invalid query parameters",
@@ -61,11 +56,6 @@ export const GET: APIRoute = async ({ locals, url }) => {
       });
     }
 
-    // Log unexpected errors for debugging
-    // eslint-disable-next-line no-console
-    console.error("Error in GET /api/kanji:", error);
-
-    // Handle database and other errors
     const errorResponse: ErrorResponseDTO = {
       error: error instanceof Error ? error.message : "Internal server error",
       code: "SERVER_ERROR",

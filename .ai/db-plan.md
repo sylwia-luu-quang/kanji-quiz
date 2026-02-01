@@ -82,30 +82,6 @@ Additional constraints
 
 ---
 
-### 1.5. `user_quiz_stats` _(materialized view)_
-
-Aggregates per-user performance. Created as:
-
-```sql
-CREATE MATERIALIZED VIEW user_quiz_stats AS
-SELECT
-  qa.user_id,
-  COUNT(*)               AS total_attempts,
-  AVG(qa.score_percent)  AS avg_score,
-  MAX(qa.created_at)     AS last_attempt_at
-FROM quiz_attempts qa
-WHERE qa.status = 'completed'
-GROUP BY qa.user_id;
-```
-
-Refresh nightly via `pg_cron`:
-
-```sql
-SELECT cron.schedule('0 3 * * *', $$ REFRESH MATERIALIZED VIEW CONCURRENTLY user_quiz_stats $$);
-```
-
----
-
 ## 2. Relationships
 
 1. **auth.users (1) — (N) quiz** via `quiz.user_id`.

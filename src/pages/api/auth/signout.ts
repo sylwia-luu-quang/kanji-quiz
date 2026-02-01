@@ -15,19 +15,15 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Create Supabase server instance with SSR cookie handling
     const supabase = createSupabaseServerInstance({
       headers: request.headers,
       cookies,
     });
 
-    // Initialize auth service
     const authService = new AuthService(supabase);
 
-    // Sign out
     await authService.signOut();
 
-    // Return success response
     return new Response(
       JSON.stringify({
         message: "Successfully signed out",
@@ -38,7 +34,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }
     );
   } catch (error) {
-    // Handle authentication errors
     if (isAuthError(error)) {
       const errorResponse: AuthErrorResponseDTO = {
         error: error.message,
@@ -50,12 +45,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    // Handle unexpected errors
-    // Note: Signout should always succeed gracefully
-    // eslint-disable-next-line no-console
-    console.error("[POST /api/auth/signout] Unexpected error:", error);
-
-    // Return success anyway to ensure user can always sign out
     return new Response(
       JSON.stringify({
         message: "Signed out",

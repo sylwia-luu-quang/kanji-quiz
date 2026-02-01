@@ -164,17 +164,7 @@ export interface Database {
         ];
       };
     };
-    Views: {
-      user_quiz_stats: {
-        Row: {
-          avg_score: number | null;
-          last_attempt_at: string | null;
-          total_attempts: number | null;
-          user_id: string | null;
-        };
-        Relationships: [];
-      };
-    };
+    Views: Record<never, never>;
     Functions: Record<never, never>;
     Enums: {
       jlpt_level: "N5" | "N4" | "N3" | "N2" | "N1";

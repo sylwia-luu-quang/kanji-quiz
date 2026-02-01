@@ -17,11 +17,8 @@ export default function DashboardHeader({ email }: DashboardHeaderProps) {
     try {
       setIsLoggingOut(true);
       await signOut();
-      // Redirect to signin page
       window.location.href = "/auth/signin";
     } catch (error) {
-      // Even if logout fails, redirect to signin
-      // The middleware will handle invalid sessions
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.error("Logout error:", error);

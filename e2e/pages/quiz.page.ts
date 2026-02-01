@@ -77,7 +77,6 @@ export class QuizPage {
 
   async abandonQuiz() {
     await this.abandonButton.click();
-    // Confirm in dialog
     await this.page.locator('button:has-text("Confirm")').click();
   }
 
@@ -101,14 +100,11 @@ export class QuizPage {
     await this.page.waitForURL("/dashboard");
   }
 
-  // New helper methods for complete quiz flow
   async answerCurrentQuestion(answer: string) {
-    // Wait for input to be ready
     await this.answerInput.waitFor({ state: "visible" });
     await this.answerInput.fill(answer);
     await this.submitButton.click();
 
-    // Wait for feedback to appear by waiting for next button to be visible
     await this.nextButton.waitFor({ state: "visible", timeout: 10000 });
   }
 
@@ -121,10 +117,8 @@ export class QuizPage {
       }
     });
 
-    // Wait for button to be visible
     await this.nextButton.waitFor({ state: "visible", timeout: 10000 });
 
-    // Wait for button to be enabled and stable
     await this.page.waitForFunction(
       () => {
         const button = document.querySelector('[data-testid="next-question-button"]') as HTMLButtonElement;
@@ -133,19 +127,14 @@ export class QuizPage {
       { timeout: 10000 }
     );
 
-    // Read the button text to determine next action
     const buttonText = await this.nextButton.textContent();
     const isFinishButton = buttonText?.includes("Finish");
 
-    // Click the button
     await this.nextButton.click({ timeout: 10000 });
 
-    // If it was "Finish Quiz", wait for completion modal
     if (isFinishButton) {
-      // Wait for the API call to complete and modal to appear
       await this.completionModal.waitFor({ state: "visible", timeout: 30000 });
     } else {
-      // Wait for next question's kanji to appear
       await this.kanjiDisplay.waitFor({ state: "visible", timeout: 10000 });
     }
   }

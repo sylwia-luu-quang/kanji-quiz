@@ -33,7 +33,6 @@ export default function HistoryPagination({ pagination, onChange }: HistoryPagin
     }
   };
 
-  // Don't show pagination if there's no items
   if (total === 0) {
     return null;
   }

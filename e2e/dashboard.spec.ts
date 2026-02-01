@@ -10,7 +10,6 @@ test.describe("Dashboard Page", () => {
     const dashboard = new DashboardPage(authenticatedPage);
     await dashboard.goto();
 
-    // Verify the dashboard loaded
     await expect(authenticatedPage).toHaveURL("/dashboard");
     await expect(dashboard.quizLevelSelect).toBeVisible();
     await expect(dashboard.quizSizeSelect).toBeVisible();

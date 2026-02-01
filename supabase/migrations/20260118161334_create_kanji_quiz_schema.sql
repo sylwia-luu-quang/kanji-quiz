@@ -1,7 +1,7 @@
 -- migration: create kanji quiz schema
--- purpose: define enums, tables, constraints, indexes, rls policies, and materialized view for kanji quiz
--- affected objects: types jlpt_level, question_type, quiz_type, quiz_status; tables kanji, quiz, quiz_questions, need_reviews; materialized view user_quiz_stats; indexes listed below
--- special considerations: references auth.users; kanji is public read-only with explicit deny on writes; materialized view uses pg_cron and requires a unique index for concurrent refresh
+-- purpose: define enums, tables, constraints, indexes, rls policies for kanji quiz
+-- affected objects: types jlpt_level, question_type, quiz_type, quiz_status; tables kanji, quiz, quiz_questions, need_reviews; indexes listed below
+-- special considerations: references auth.users; kanji is public read-only with explicit deny on writes
 
 -- 1) enum types for jlpt level, quiz structure, and status
 create type jlpt_level as enum ('N5', 'N4', 'N3', 'N2', 'N1');
@@ -324,27 +324,3 @@ create policy need_reviews_delete_authenticated
   for delete
   to authenticated
   using (user_id = auth.uid());
-
--- 6) materialized view for per-user quiz performance
-create materialized view user_quiz_stats as
-select
-  q.user_id,
-  count(*) as total_attempts,
-  avg(q.score_percent) as avg_score,
-  max(q.created_at) as last_attempt_at
-from quiz q
-where q.status = 'completed'
-group by q.user_id;
-
--- required for concurrent refresh of the materialized view
-create unique index user_quiz_stats_user_id_idx on user_quiz_stats(user_id);
-
--- pg_cron is used to refresh nightly; requires the extension to be enabled
-create extension if not exists pg_cron with schema extensions;
-
--- schedule a nightly refresh at 03:00 utc
-select cron.schedule(
-  'refresh_user_quiz_stats_nightly',
-  '0 3 * * *',
-  $$refresh materialized view concurrently user_quiz_stats$$
-);

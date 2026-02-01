@@ -10,21 +10,16 @@ interface AuthFixtures {
 
 export const test = base.extend<AuthFixtures>({
   authenticatedPage: async ({ page }, use) => {
-    // Get test credentials from environment variables
     const testEmail = process.env.E2E_USERNAME || "test@example.com";
     const testPassword = process.env.E2E_PASSWORD || "testpassword123";
 
-    // Navigate to sign-in page
     await page.goto("/auth/signin");
 
-    // Wait for form to be ready
     await page.waitForLoadState("networkidle");
 
-    // Perform login using accessible locators (React-compatible)
     await page.getByLabel("Email").fill(testEmail);
     await page.getByRole("textbox", { name: "Password" }).fill(testPassword);
 
-    // Click submit and wait for navigation
     await Promise.all([
       page.waitForURL("/dashboard", { timeout: 10000 }),
       page.getByRole("button", { name: /sign in/i }).click(),
@@ -33,8 +28,6 @@ export const test = base.extend<AuthFixtures>({
     // Use the authenticated page
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(page);
-
-    // No cleanup needed - Playwright creates fresh contexts for each test
   },
 });
 

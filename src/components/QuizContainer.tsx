@@ -36,7 +36,6 @@ function QuizContainerInner({ initialQuiz, quizId }: QuizContainerProps) {
     updateCurrentAnswer,
   } = useQuizState({ initialQuiz, quizId });
 
-  // Handle API errors with toast notifications
   const handleError = (error: unknown, defaultMessage: string) => {
     if (error instanceof QuizAPIError) {
       switch (error.status) {
@@ -74,12 +73,10 @@ function QuizContainerInner({ initialQuiz, quizId }: QuizContainerProps) {
     }
   };
 
-  // Handle abandon quiz
   const handleAbandon = async () => {
     try {
       await handleAbandonQuiz();
       toast.showToast("Quiz abandoned", "info");
-      // Navigate to dashboard
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 1000);
@@ -88,32 +85,28 @@ function QuizContainerInner({ initialQuiz, quizId }: QuizContainerProps) {
     }
   };
 
-  // Handle submit answer
   const handleSubmit = async (answer: string) => {
     try {
       await submitQuestionAnswer(answer);
     } catch (error) {
       handleError(error, "Failed to submit answer. Please try again.");
-      throw error; // Re-throw to let CurrentQuestion handle it
+      throw error;
     }
   };
 
-  // Handle toggle need review
   const handleToggle = async (kanjiId: number) => {
     try {
       await toggleNeedReview(kanjiId);
     } catch (error) {
       handleError(error, "Failed to update review status. Please try again.");
-      throw error; // Re-throw to let component handle rollback
+      throw error;
     }
   };
 
-  // Handle return to dashboard
   const handleReturnToDashboard = () => {
     window.location.href = "/dashboard";
   };
 
-  // Show loading state if no current question
   if (!currentQuestion) {
     return (
       <div className="flex min-h-screen items-center justify-center">
