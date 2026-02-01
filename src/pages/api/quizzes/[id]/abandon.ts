@@ -10,7 +10,6 @@ import {
   QuizAbandonmentError,
 } from "../../../../lib/errors/quiz.errors";
 import type { ErrorResponseDTO } from "../../../../types";
-import { DEFAULT_USER_ID } from "../../../../db/supabase.client";
 
 /**
  * PATCH /api/quizzes/:id/abandon
@@ -55,18 +54,16 @@ export const PATCH: APIRoute = async ({ params, locals }) => {
     const validatedParams = parseAbandonQuizParams(params.id || "");
     const quizId = validatedParams.id;
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },
@@ -84,7 +81,6 @@ export const PATCH: APIRoute = async ({ params, locals }) => {
       },
     });
   } catch (error) {
-    // Handle validation errors (invalid quiz ID)
     if (error instanceof ZodError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Invalid quiz ID",
@@ -100,7 +96,6 @@ export const PATCH: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle quiz not found
     if (error instanceof QuizNotFoundError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Quiz not found",
@@ -118,7 +113,6 @@ export const PATCH: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle access denied (user doesn't own quiz)
     if (error instanceof QuizAccessDeniedError) {
       const errorResponse: ErrorResponseDTO = {
         error: "You do not have permission to abandon this quiz",
@@ -136,7 +130,6 @@ export const PATCH: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle quiz not abandonable (already completed or abandoned)
     if (error instanceof QuizNotAbandonableError) {
       const errorResponse: ErrorResponseDTO = {
         error: error.message,
@@ -155,7 +148,6 @@ export const PATCH: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle quiz abandonment errors
     if (error instanceof QuizAbandonmentError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Failed to abandon quiz. Please try again later.",
@@ -170,7 +162,6 @@ export const PATCH: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle unexpected errors
     const errorResponse: ErrorResponseDTO = {
       error: "Internal server error",
       code: "SERVER_ERROR",

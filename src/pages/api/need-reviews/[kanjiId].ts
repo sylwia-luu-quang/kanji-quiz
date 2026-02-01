@@ -4,7 +4,6 @@ import { ZodError } from "zod";
 import { parseDeleteNeedReviewParams } from "../../../lib/validation/need-review.validation";
 import { NeedReviewService } from "../../../lib/services/need-review.service";
 import type { ErrorResponseDTO } from "../../../types";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 /**
  * DELETE /api/need-reviews/:kanjiId
@@ -34,37 +33,31 @@ import { DEFAULT_USER_ID } from "../../../db/supabase.client";
  */
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
-    // Validate path parameter
     const validatedParams = parseDeleteNeedReviewParams(params.kanjiId);
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },
       });
     }
 
-    // Call service layer to remove need-review entry
     const needReviewService = new NeedReviewService(locals.supabase);
     await needReviewService.removeNeedReview(userId, validatedParams.kanjiId);
 
-    // Return 204 No Content (idempotent - always success)
     return new Response(null, {
       status: 204,
     });
   } catch (error) {
-    // Handle validation errors
     if (error instanceof ZodError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Invalid kanjiId parameter",
@@ -80,11 +73,6 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Log unexpected errors for debugging
-    // eslint-disable-next-line no-console
-    console.error("Error in DELETE /api/need-reviews/:kanjiId:", error);
-
-    // Handle database and other errors
     const errorResponse: ErrorResponseDTO = {
       error: error instanceof Error ? error.message : "Failed to remove kanji from need-review list",
       code: "SERVER_ERROR",

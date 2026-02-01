@@ -5,7 +5,6 @@ import { parseCreateQuizBody, parseGetQuizListQuery } from "../../../lib/validat
 import { QuizService } from "../../../lib/services/quiz.service";
 import { InsufficientKanjiError, QuizCreationError } from "../../../lib/errors/quiz.errors";
 import type { ErrorResponseDTO, QuizListResponseDTO } from "../../../types";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 /**
  * POST /api/quizzes
@@ -44,18 +43,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const validatedBody = parseCreateQuizBody(body);
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },
@@ -169,18 +166,16 @@ export const GET: APIRoute = async ({ request, locals }) => {
     const url = new URL(request.url);
     const validatedQuery = parseGetQuizListQuery(url.searchParams);
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },

@@ -5,7 +5,6 @@ import { parseGetQuizByIdParams } from "../../../../lib/validation/quiz.validati
 import { QuizService } from "../../../../lib/services/quiz.service";
 import { QuizNotFoundError, QuizAccessDeniedError, QuizCreationError } from "../../../../lib/errors/quiz.errors";
 import type { ErrorResponseDTO } from "../../../../types";
-import { DEFAULT_USER_ID } from "../../../../db/supabase.client";
 
 /**
  * GET /api/quizzes/:id
@@ -58,7 +57,6 @@ import { DEFAULT_USER_ID } from "../../../../db/supabase.client";
  */
 export const GET: APIRoute = async ({ params, locals }) => {
   try {
-    // Extract and validate quiz ID from path parameter
     const { id } = params;
 
     if (!id) {
@@ -77,25 +75,22 @@ export const GET: APIRoute = async ({ params, locals }) => {
 
     const validatedParams = parseGetQuizByIdParams(id);
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },
       });
     }
 
-    // Instantiate QuizService and fetch quiz
     const quizService = new QuizService(locals.supabase);
     const quiz = await quizService.getQuizById(validatedParams.id, userId);
 
@@ -106,7 +101,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
       },
     });
   } catch (error) {
-    // Handle validation errors
     if (error instanceof ZodError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Invalid quiz ID",
@@ -122,7 +116,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle quiz not found error
     if (error instanceof QuizNotFoundError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Quiz not found",
@@ -140,7 +133,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle access denied error
     if (error instanceof QuizAccessDeniedError) {
       const errorResponse: ErrorResponseDTO = {
         error: "You do not have permission to access this quiz",
@@ -158,7 +150,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
       });
     }
 
-    // Handle database errors
     if (error instanceof QuizCreationError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Failed to retrieve quiz",
@@ -172,8 +163,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
         },
       });
     }
-
-    // Handle unexpected errors
 
     const errorResponse: ErrorResponseDTO = {
       error: "Internal server error",

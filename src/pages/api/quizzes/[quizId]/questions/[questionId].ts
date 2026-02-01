@@ -12,7 +12,6 @@ import {
   AnswerSubmissionError,
 } from "../../../../../lib/errors/quiz.errors";
 import type { ErrorResponseDTO } from "../../../../../types";
-import { DEFAULT_USER_ID } from "../../../../../db/supabase.client";
 
 /**
  * PATCH /api/quizzes/:quizId/questions/:questionId
@@ -73,34 +72,29 @@ import { DEFAULT_USER_ID } from "../../../../../db/supabase.client";
  */
 export const PATCH: APIRoute = async ({ params, request, locals }) => {
   try {
-    // Extract and validate path parameters
     const validatedParams = parseSubmitAnswerParams(params.quizId || "", params.questionId || "");
     const { quizId, questionId } = validatedParams;
 
-    // Parse and validate request body
     const body = await request.json();
     const validatedBody = parseSubmitAnswerBody(body);
     const { user_answer } = validatedBody;
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },
       });
     }
 
-    // Initialize service and submit answer
     const quizService = new QuizService(locals.supabase);
     const result = await quizService.submitAnswer(quizId, questionId, user_answer, userId);
 
@@ -111,7 +105,6 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       },
     });
   } catch (error) {
-    // Handle validation errors (invalid parameters or request body)
     if (error instanceof ZodError) {
       const errorResponse: ErrorResponseDTO = {
         error: error.errors[0].message,
@@ -127,7 +120,6 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       });
     }
 
-    // Handle quiz not found
     if (error instanceof QuizNotFoundError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Quiz not found",
@@ -145,7 +137,6 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       });
     }
 
-    // Handle access denied (user doesn't own quiz)
     if (error instanceof QuizAccessDeniedError) {
       const errorResponse: ErrorResponseDTO = {
         error: "You do not have permission to submit answers for this quiz",
@@ -163,7 +154,6 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       });
     }
 
-    // Handle quiz invalid state (not in progress)
     if (error instanceof QuizInvalidStateError) {
       const errorResponse: ErrorResponseDTO = {
         error: error.message,
@@ -182,7 +172,6 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       });
     }
 
-    // Handle question not found
     if (error instanceof QuestionNotFoundError) {
       const errorResponse: ErrorResponseDTO = {
         error: error.message,
@@ -201,7 +190,6 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       });
     }
 
-    // Handle question already answered
     if (error instanceof QuestionAlreadyAnsweredError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Question has already been answered",
@@ -220,7 +208,6 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       });
     }
 
-    // Handle answer submission errors
     if (error instanceof AnswerSubmissionError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Failed to submit answer. Please try again later.",

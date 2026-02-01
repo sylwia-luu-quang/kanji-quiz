@@ -5,7 +5,6 @@ import { parseAddNeedReviewBody, parseNeedReviewQueryParams } from "../../../lib
 import { NeedReviewService } from "../../../lib/services/need-review.service";
 import { KanjiNotFoundError, NeedReviewCreationError } from "../../../lib/errors/need-review.errors";
 import type { ErrorResponseDTO } from "../../../types";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 /**
  * GET /api/need-reviews
@@ -50,32 +49,27 @@ import { DEFAULT_USER_ID } from "../../../db/supabase.client";
  */
 export const GET: APIRoute = async ({ locals, url }) => {
   try {
-    // Validate query parameters
     const queryParams = parseNeedReviewQueryParams(url.searchParams);
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },
       });
     }
 
-    // Initialize service and fetch need-review list
     const needReviewService = new NeedReviewService(locals.supabase);
     const result = await needReviewService.getNeedReviewList(userId, queryParams);
 
-    // Return success response
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: {
@@ -83,7 +77,6 @@ export const GET: APIRoute = async ({ locals, url }) => {
       },
     });
   } catch (error) {
-    // Handle validation errors
     if (error instanceof ZodError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Invalid query parameters",
@@ -99,11 +92,6 @@ export const GET: APIRoute = async ({ locals, url }) => {
       });
     }
 
-    // Log unexpected errors for debugging
-    // eslint-disable-next-line no-console
-    console.error("Error in GET /api/need-reviews:", error);
-
-    // Handle database and other errors
     const errorResponse: ErrorResponseDTO = {
       error: error instanceof Error ? error.message : "Internal server error",
       code: "SERVER_ERROR",
@@ -158,33 +146,28 @@ export const GET: APIRoute = async ({ locals, url }) => {
  */
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Parse and validate request body
     const body = await request.json();
     const validatedBody = parseAddNeedReviewBody(body);
 
-    // TODO: Extract user_id from authenticated session
-    // For development: use default user ID
-    const userId = DEFAULT_USER_ID;
+    const userId = locals.user?.id;
 
     if (!userId) {
       const errorResponse: ErrorResponseDTO = {
-        error: "User ID not available",
-        code: "MISSING_USER_ID",
+        error: "User not authenticated",
+        code: "UNAUTHORIZED",
       };
 
       return new Response(JSON.stringify(errorResponse), {
-        status: 500,
+        status: 401,
         headers: {
           "Content-Type": "application/json",
         },
       });
     }
 
-    // Call service layer to add need-review entry
     const needReviewService = new NeedReviewService(locals.supabase);
     const result = await needReviewService.addNeedReview(userId, validatedBody.kanji_id);
 
-    // Determine status code based on whether entry is new
     const statusCode = result.isNewEntry ? 201 : 200;
 
     return new Response(JSON.stringify(result.needReview), {
@@ -194,7 +177,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       },
     });
   } catch (error) {
-    // Handle validation errors
     if (error instanceof ZodError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Invalid request body",
@@ -210,7 +192,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    // Handle kanji not found
     if (error instanceof KanjiNotFoundError) {
       const errorResponse: ErrorResponseDTO = {
         error: error.message,
@@ -228,7 +209,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    // Handle database errors
     if (error instanceof NeedReviewCreationError) {
       const errorResponse: ErrorResponseDTO = {
         error: "Failed to add kanji to need-review list. Please try again later.",
@@ -242,8 +222,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
         },
       });
     }
-
-    // Handle unexpected errors
 
     const errorResponse: ErrorResponseDTO = {
       error: "Internal server error",
