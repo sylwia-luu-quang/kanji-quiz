@@ -110,7 +110,9 @@ export class NeedReviewService {
     }
 
     // Transform entities to DTOs
-    const needReviewDTOs = (data || []).map((item) => this.transformToNeedReviewDTO(item as NeedReviewWithKanji));
+    const needReviewDTOs = (data || []).map((item) =>
+      this.transformToNeedReviewDTO(item as unknown as NeedReviewWithKanji)
+    );
 
     // Build response with pagination metadata
     return {
@@ -220,7 +222,7 @@ export class NeedReviewService {
       return null;
     }
 
-    return this.transformToNeedReviewDTO(data as NeedReviewWithKanji);
+    return this.transformToNeedReviewDTO(data as unknown as NeedReviewWithKanji);
   }
 
   /**
@@ -272,7 +274,7 @@ export class NeedReviewService {
       throw new NeedReviewCreationError("Failed to fetch created need-review entry", error);
     }
 
-    return this.transformToNeedReviewDTO(data as NeedReviewWithKanji);
+    return this.transformToNeedReviewDTO(data as unknown as NeedReviewWithKanji);
   }
 
   /**

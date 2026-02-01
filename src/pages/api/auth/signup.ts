@@ -17,10 +17,8 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Parse request body
     const body = await request.json();
 
-    // Validate input
     let validatedData;
     try {
       validatedData = parseSignUpBody(body);
@@ -43,22 +41,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       throw error;
     }
 
-    // Create Supabase server instance with SSR cookie handling
     const supabase = createSupabaseServerInstance({
       headers: request.headers,
       cookies,
     });
 
-    // Initialize auth service
     const authService = new AuthService(supabase);
 
-    // Attempt sign-up
     const result = await authService.signUp({
       email: validatedData.email,
       password: validatedData.password,
     });
 
-    // Return success response
     const response: SignUpResponseDTO = {
       userId: result.userId,
       email: result.email,
@@ -70,7 +64,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    // Handle authentication errors
     if (isAuthError(error)) {
       const errorResponse: AuthErrorResponseDTO = {
         error: error.message,
@@ -82,8 +75,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    // Handle unexpected errors
-    console.error("[POST /api/auth/signup] Unexpected error:", error);
     const errorResponse: AuthErrorResponseDTO = {
       error: "An unexpected error occurred",
       code: "AUTH_SERVICE_ERROR",

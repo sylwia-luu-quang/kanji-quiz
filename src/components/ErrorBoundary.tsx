@@ -4,7 +4,7 @@
  * React error boundary for catching and displaying errors in the quiz
  */
 
-import React, { Component, ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 
@@ -26,10 +26,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Quiz Error Boundary caught an error:", error, errorInfo);
   }
 
   reset = () => {

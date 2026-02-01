@@ -14,8 +14,8 @@ export function NextQuestionButton({ onClick, isLastQuestion }: NextQuestionButt
     setIsLoading(true);
     try {
       await onClick();
-    } catch (err) {
-      console.error("Failed to proceed:", err);
+    } catch {
+      // Error is handled by parent component
     } finally {
       setIsLoading(false);
     }

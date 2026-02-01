@@ -2,20 +2,20 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master, main, dev]
+    branches: [master, dev]
   pull_request:
-    branches: [master, main, dev]
+    branches: [master, dev]
   workflow_dispatch:
     inputs:
       run_e2e:
         description: 'Run E2E tests'
         required: false
-        default: 'true'
+        default: true
         type: boolean
       run_build:
         description: 'Run production build'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 jobs:
