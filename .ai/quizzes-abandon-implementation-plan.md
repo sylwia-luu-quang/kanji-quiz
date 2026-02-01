@@ -5,6 +5,7 @@
 This endpoint allows users to abandon an in-progress quiz, changing its status from `in_progress` to `abandoned`. The endpoint provides a way for users to explicitly mark a quiz they've started but don't intend to complete, preserving any need-review toggles they made during the quiz session.
 
 **Key Characteristics:**
+
 - Requires authentication (JWT Bearer token)
 - Only works on quizzes with `status='in_progress'`
 - Preserves all quiz questions and their state (including answers if any)
@@ -19,9 +20,11 @@ This endpoint allows users to abandon an in-progress quiz, changing its status f
 **URL Structure:** `/api/quizzes/:id/abandon`
 
 **Path Parameters:**
+
 - `id` (required): Quiz ID as a positive integer
 
 **Request Headers:**
+
 - `Authorization: Bearer <jwt_token>` (required)
 
 **Request Body:** None
@@ -125,6 +128,7 @@ export class QuizAbandonmentError extends Error {
 **Response Type:** `QuizDTO`
 
 **Key Fields:**
+
 - `status`: Will always be "abandoned"
 - `score_percent`: Will always be null (quiz not scored)
 - `completed_at`: Will always be null (quiz not completed)
@@ -132,6 +136,7 @@ export class QuizAbandonmentError extends Error {
 ### 4.2 Error Responses
 
 #### 400 Bad Request
+
 **Scenario:** Quiz is already completed or abandoned
 
 ```json
@@ -151,6 +156,7 @@ export class QuizAbandonmentError extends Error {
 ```
 
 #### 401 Unauthorized
+
 **Scenario:** Missing or invalid authentication token
 
 ```json
@@ -161,6 +167,7 @@ export class QuizAbandonmentError extends Error {
 ```
 
 #### 403 Forbidden
+
 **Scenario:** User does not own this quiz
 
 ```json
@@ -171,6 +178,7 @@ export class QuizAbandonmentError extends Error {
 ```
 
 #### 404 Not Found
+
 **Scenario:** Quiz not found
 
 ```json
@@ -181,6 +189,7 @@ export class QuizAbandonmentError extends Error {
 ```
 
 #### 500 Internal Server Error
+
 **Scenario:** Database or unexpected server error
 
 ```json
@@ -225,14 +234,14 @@ export class QuizAbandonmentError extends Error {
 
 ```sql
 -- Step 1: Fetch quiz and verify ownership
-SELECT * FROM quiz 
+SELECT * FROM quiz
 WHERE id = $1 AND user_id = $2;
 
 -- Step 2: Check if quiz exists (if step 1 returns nothing)
 SELECT id FROM quiz WHERE id = $1;
 
 -- Step 3: Update quiz status
-UPDATE quiz 
+UPDATE quiz
 SET status = 'abandoned'
 WHERE id = $1 AND user_id = $2
 RETURNING *;
@@ -256,10 +265,12 @@ abandoned → abandoned ✗ (400 error)
 ### 6.1 Authentication & Authorization
 
 **Threat:** Unauthenticated access
+
 - **Mitigation:** Middleware checks JWT token before handler executes
 - **Error:** 401 Unauthorized if token missing/invalid
 
 **Threat:** Unauthorized quiz access (IDOR - Insecure Direct Object Reference)
+
 - **Mitigation:** Service layer verifies `quiz.user_id === authenticated_user_id`
 - **Implementation:** Use `.eq('user_id', userId)` in Supabase query
 - **Error:** 403 Forbidden if user doesn't own quiz
@@ -267,27 +278,32 @@ abandoned → abandoned ✗ (400 error)
 ### 6.2 Input Validation
 
 **Threat:** SQL Injection via quiz ID
-- **Mitigation:** 
+
+- **Mitigation:**
   - Zod schema validates ID is numeric string only (regex `/^\d+$/`)
   - Supabase uses parameterized queries
   - Transform to number type before database query
 
 **Threat:** Path traversal or malicious input
+
 - **Mitigation:** Strict regex validation, reject any non-numeric input
 
 ### 6.3 Business Logic Security
 
 **Threat:** State manipulation (abandoning completed quizzes)
+
 - **Mitigation:** Service validates current status before update
 - **Error:** 400 Bad Request with descriptive message
 
 **Threat:** Data loss (accidentally abandoning active quiz)
+
 - **Consideration:** This is intentional user action, no additional safeguards needed
 - **Note:** Questions and need-review toggles are preserved
 
 ### 6.4 Rate Limiting
 
 **Recommendation:** Apply rate limiting at API gateway level
+
 - Prevent abuse of abandonment endpoint
 - Limit: ~10 abandon requests per minute per user
 
@@ -301,24 +317,23 @@ Follow guard clause pattern with early returns:
 try {
   // Validation
   const params = parseAbandonQuizParams(id);
-  
+
   // Authentication check
   if (!context.locals.user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   }
-  
+
   // Service call
   const quiz = await quizService.abandonQuiz(params.id, context.locals.user.id);
-  
+
   // Success response
   return new Response(JSON.stringify(quiz), {
     status: 200,
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json" },
   });
-  
 } catch (error) {
   // Error mapping
 }
@@ -326,23 +341,25 @@ try {
 
 ### 7.2 Error Mapping Table
 
-| Error Type | HTTP Status | Error Code | Response Message |
-|------------|-------------|------------|------------------|
-| `ZodError` | 400 | INVALID_INPUT | First validation error message |
-| `QuizNotFoundError` | 404 | QUIZ_NOT_FOUND | "Quiz not found with id: {id}" |
-| `QuizAccessDeniedError` | 403 | ACCESS_DENIED | "User {userId} does not have permission to access quiz {quizId}" |
-| `QuizNotAbandonableError` | 400 | QUIZ_NOT_ABANDONABLE | "Quiz {quizId} cannot be abandoned. Current status: {status}" |
-| `QuizAbandonmentError` | 500 | INTERNAL_ERROR | "Failed to abandon quiz" |
-| Unknown errors | 500 | INTERNAL_ERROR | "An unexpected error occurred" |
+| Error Type                | HTTP Status | Error Code           | Response Message                                                 |
+| ------------------------- | ----------- | -------------------- | ---------------------------------------------------------------- |
+| `ZodError`                | 400         | INVALID_INPUT        | First validation error message                                   |
+| `QuizNotFoundError`       | 404         | QUIZ_NOT_FOUND       | "Quiz not found with id: {id}"                                   |
+| `QuizAccessDeniedError`   | 403         | ACCESS_DENIED        | "User {userId} does not have permission to access quiz {quizId}" |
+| `QuizNotAbandonableError` | 400         | QUIZ_NOT_ABANDONABLE | "Quiz {quizId} cannot be abandoned. Current status: {status}"    |
+| `QuizAbandonmentError`    | 500         | INTERNAL_ERROR       | "Failed to abandon quiz"                                         |
+| Unknown errors            | 500         | INTERNAL_ERROR       | "An unexpected error occurred"                                   |
 
 ### 7.3 Logging Strategy
 
 **Error Levels:**
+
 - **400-level errors:** Log as `console.warn()` - client errors
 - **500-level errors:** Log as `console.error()` - server errors
 - Include stack traces for 500 errors only
 
 **Logged Information:**
+
 - Error type and message
 - Quiz ID
 - User ID (for authorization context)
@@ -363,11 +380,13 @@ console.error("Quiz abandonment failed", {
 ### 8.1 Database Operations
 
 **Query Efficiency:**
+
 - Single query to fetch and verify ownership (indexed on `id` and `user_id`)
 - Single update query with WHERE clause on primary key
 - Total: 2-3 database queries maximum (including existence check on error)
 
 **Indexes Required:**
+
 - Primary key on `quiz.id` (already exists)
 - Index on `quiz.user_id` (should exist for foreign key)
 - Composite index on `(id, user_id)` would be optimal
@@ -402,21 +421,26 @@ console.error("Quiz abandonment failed", {
 ## 9. Implementation Steps
 
 ### Step 1: Add Validation Schema
+
 **File:** `src/lib/validation/quiz.validation.ts`
 
 Add the following to the file:
+
 - `abandonQuizParamsSchema` - Zod schema for path parameter validation
 - `AbandonQuizParams` - TypeScript type inferred from schema
 - `parseAbandonQuizParams()` - Validation function
 
 ### Step 2: Add Custom Error Classes
+
 **File:** `src/lib/errors/quiz.errors.ts`
 
 Add two new error classes:
+
 - `QuizNotAbandonableError` - For quizzes that cannot be abandoned (wrong status)
 - `QuizAbandonmentError` - For general abandonment failures
 
 ### Step 3: Implement Service Method
+
 **File:** `src/lib/services/quiz.service.ts`
 
 Add `abandonQuiz` method to `QuizService` class:
@@ -443,6 +467,7 @@ async abandonQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ```
 
 **Implementation details:**
+
 - Follow the same pattern as `completeQuiz` method
 - Verify ownership with `.eq('user_id', userId)`
 - Check current status before update
@@ -450,6 +475,7 @@ async abandonQuiz(quizId: number, userId: string): Promise<QuizDTO>
 - Return updated quiz on success
 
 ### Step 4: Create API Endpoint Handler
+
 **File:** `src/pages/api/quizzes/[id]/abandon.ts`
 
 Create new Astro API endpoint:
@@ -472,6 +498,7 @@ export const PATCH: APIRoute = async (context) => {
 ```
 
 **Handler logic:**
+
 1. Extract and validate path parameter (quiz ID)
 2. Check authentication (context.locals.user)
 3. Initialize QuizService with Supabase client
@@ -480,6 +507,7 @@ export const PATCH: APIRoute = async (context) => {
 6. Return JSON response
 
 ### Step 5: Error Handling Implementation
+
 **In:** `src/pages/api/quizzes/[id]/abandon.ts`
 
 Implement comprehensive error handling:
@@ -490,24 +518,24 @@ try {
 } catch (error) {
   if (error instanceof ZodError) {
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.errors[0].message,
-        code: "INVALID_INPUT" 
+        code: "INVALID_INPUT",
       }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
-  
+
   if (error instanceof QuizNotFoundError) {
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
-        code: "QUIZ_NOT_FOUND" 
+        code: "QUIZ_NOT_FOUND",
       }),
       { status: 404, headers: { "Content-Type": "application/json" } }
     );
   }
-  
+
   // ... other error types
 }
 ```

@@ -129,10 +129,10 @@ describe('MyComponent', () => {
   it('should handle user interaction', async () => {
     const user = userEvent.setup();
     const handleClick = vi.fn();
-    
+
     render(<MyComponent onClick={handleClick} />);
     await user.click(screen.getByRole('button'));
-    
+
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 });
@@ -141,15 +141,15 @@ describe('MyComponent', () => {
 ### Component Tests with Mocks
 
 ```typescript
-import { vi } from 'vitest';
-import { createMockSupabaseClient } from '@/tests/mocks/supabase.mock';
+import { vi } from "vitest";
+import { createMockSupabaseClient } from "@/tests/mocks/supabase.mock";
 
-vi.mock('@/db/supabase.client', () => ({
+vi.mock("@/db/supabase.client", () => ({
   supabase: createMockSupabaseClient(),
 }));
 
-describe('Component with Supabase', () => {
-  it('should fetch data', async () => {
+describe("Component with Supabase", () => {
+  it("should fetch data", async () => {
     // Test implementation
   });
 });
@@ -158,16 +158,16 @@ describe('Component with Supabase', () => {
 ### E2E Tests Example
 
 ```typescript
-import { test, expect } from '@/e2e/fixtures/auth.fixture';
-import { DashboardPage } from '@/e2e/pages/dashboard.page';
+import { test, expect } from "@/e2e/fixtures/auth.fixture";
+import { DashboardPage } from "@/e2e/pages/dashboard.page";
 
-test.describe('Dashboard', () => {
-  test('should create a quiz', async ({ authenticatedPage }) => {
+test.describe("Dashboard", () => {
+  test("should create a quiz", async ({ authenticatedPage }) => {
     const dashboard = new DashboardPage(authenticatedPage);
     await dashboard.goto();
-    
-    await dashboard.createAndStartQuiz('N5', '10');
-    
+
+    await dashboard.createAndStartQuiz("N5", "10");
+
     await expect(authenticatedPage).toHaveURL(/\/quiz\/[a-z0-9-]+/);
   });
 });
@@ -177,7 +177,7 @@ test.describe('Dashboard', () => {
 
 ```typescript
 // e2e/pages/my-page.page.ts
-import { Page } from '@playwright/test';
+import { Page } from "@playwright/test";
 
 export class MyPage {
   constructor(private page: Page) {}
@@ -189,7 +189,7 @@ export class MyPage {
 
   // Actions
   async goto() {
-    await this.page.goto('/my-page');
+    await this.page.goto("/my-page");
   }
 
   async clickButton() {
@@ -258,20 +258,20 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      
+          node-version: "20"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run unit tests
         run: npm run test:coverage
-      
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-      
+
       - name: Run E2E tests
         run: npm run test:e2e
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:

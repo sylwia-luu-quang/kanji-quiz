@@ -25,7 +25,7 @@ Kanji Quiz is a web application that helps Japanese-language learners prepare fo
 - **Frontend**: [Astro](https://astro.build/) 5 + [React](https://react.dev/) 19 (TypeScript 5)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) 4, [Shadcn/ui](https://ui.shadcn.com/)
 - **Backend-as-a-Service**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, Storage)
-- **Testing**: 
+- **Testing**:
   - **Unit Tests**: [Vitest](https://vitest.dev/) (testing framework with native Vite integration)
   - **Component Tests**: [React Testing Library](https://testing-library.com/react) + Vitest
   - **E2E Tests**: [Playwright](https://playwright.dev/) (cross-browser testing)
@@ -75,24 +75,24 @@ The site will be available at `http://localhost:3000` by default.
 
 The following npm scripts are defined in `package.json`:
 
-| Script | Purpose |
-|--------|---------|
-| `dev` | Run Astro in development mode with hot reload |
-| `build` | Build the static site for production |
-| `preview` | Serve the built site locally to preview the production build |
-| `astro` | Direct access to the Astro CLI |
-| `lint` | Lint all source files with ESLint |
-| `lint:fix` | Lint and automatically fix issues |
-| `format` | Format files using Prettier |
-| `test` | Run unit tests with Vitest |
-| `test:ui` | Run unit tests with Vitest UI |
-| `test:watch` | Run unit tests in watch mode |
-| `test:coverage` | Run unit tests with coverage report |
-| `test:e2e` | Run end-to-end tests with Playwright |
-| `test:e2e:ui` | Run E2E tests with Playwright UI |
-| `test:e2e:headed` | Run E2E tests in headed mode (visible browser) |
-| `test:e2e:debug` | Run E2E tests in debug mode |
-| `test:all` | Run all tests (unit + E2E) |
+| Script            | Purpose                                                      |
+| ----------------- | ------------------------------------------------------------ |
+| `dev`             | Run Astro in development mode with hot reload                |
+| `build`           | Build the static site for production                         |
+| `preview`         | Serve the built site locally to preview the production build |
+| `astro`           | Direct access to the Astro CLI                               |
+| `lint`            | Lint all source files with ESLint                            |
+| `lint:fix`        | Lint and automatically fix issues                            |
+| `format`          | Format files using Prettier                                  |
+| `test`            | Run unit tests with Vitest                                   |
+| `test:ui`         | Run unit tests with Vitest UI                                |
+| `test:watch`      | Run unit tests in watch mode                                 |
+| `test:coverage`   | Run unit tests with coverage report                          |
+| `test:e2e`        | Run end-to-end tests with Playwright                         |
+| `test:e2e:ui`     | Run E2E tests with Playwright UI                             |
+| `test:e2e:headed` | Run E2E tests in headed mode (visible browser)               |
+| `test:e2e:debug`  | Run E2E tests in debug mode                                  |
+| `test:all`        | Run all tests (unit + E2E)                                   |
 
 Run any script with `npm run <script>` (or your preferred package manager).
 

@@ -34,11 +34,11 @@ Fixtures:      e2e/fixtures/
 ### Unit Test Template
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 
-describe('Component', () => {
-  it('should do something', () => {
+describe("Component", () => {
+  it("should do something", () => {
     // Arrange
     // Act
     // Assert
@@ -49,11 +49,11 @@ describe('Component', () => {
 ### E2E Test Template
 
 ```typescript
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Feature', () => {
-  test('should do something', async ({ page }) => {
-    await page.goto('/path');
+test.describe("Feature", () => {
+  test("should do something", async ({ page }) => {
+    await page.goto("/path");
     // Test implementation
   });
 });
@@ -62,6 +62,7 @@ test.describe('Feature', () => {
 ## Debugging
 
 ### Unit Tests
+
 ```bash
 # Run specific test
 npm test -- path/to/test.test.ts
@@ -74,6 +75,7 @@ npm test -- -t "test name pattern"
 ```
 
 ### E2E Tests
+
 ```bash
 # Debug specific test
 npx playwright test --debug path/to/test.spec.ts
@@ -98,17 +100,20 @@ open coverage/index.html
 ## VS Code Integration
 
 Install recommended extensions:
+
 - Vitest (`vitest.explorer`)
 - Playwright Test for VS Code (`ms-playwright.playwright`)
 
 ## Common Issues
 
 ### Vitest
+
 - **Import errors**: Check `@/` alias in `vitest.config.ts`
 - **DOM not available**: Ensure `environment: 'jsdom'`
 - **Mocks not working**: Check mock factory is at top level
 
 ### Playwright
+
 - **Browser not found**: `npx playwright install chromium`
 - **Timeout**: Increase in `playwright.config.ts` or use `test.setTimeout()`
 - **Flaky test**: Add `test.fail()` or use `waitForLoadState()`
@@ -116,6 +121,7 @@ Install recommended extensions:
 ## Best Practices
 
 ✅ **Do:**
+
 - Use descriptive test names
 - Follow AAA pattern (Arrange, Act, Assert)
 - Test user behavior, not implementation
@@ -123,6 +129,7 @@ Install recommended extensions:
 - Add `data-testid` for reliable selectors
 
 ❌ **Don't:**
+
 - Test implementation details
 - Use arbitrary timeouts
 - Repeat setup code (use fixtures)

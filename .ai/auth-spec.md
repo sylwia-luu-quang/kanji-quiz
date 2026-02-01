@@ -9,6 +9,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **MVP Scope**: Registration, login, and logout only. Password recovery deferred to post-MVP.
 
 **Key Principles**:
+
 - All application functionality available only to authenticated users
 - Server-side session validation via Supabase Auth
 - Client-side interactive forms using React
@@ -22,32 +23,38 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 ### 1.1 New Authentication Pages
 
 **`/src/pages/auth/signin.astro`**
+
 - Check for existing session, redirect authenticated users to dashboard
 - Accept optional `redirect` query parameter for post-login navigation
 - Render `SignInForm` React component with `client:load`
 - Link to signup page
 
 **`/src/pages/auth/signup.astro`**
+
 - Check for existing session, redirect authenticated users to dashboard
 - Accept optional `redirect` query parameter
 - Render `SignUpForm` React component with `client:load`
 - Link to signin page
 
 **`/src/pages/auth/callback.astro`** (Future)
+
 - Handle OAuth callbacks and email verification when enabled
 - Pure server-side processing, no client component
 
 ### 1.2 Protected Pages (Modified)
 
 **`/src/pages/index.astro`**
+
 - Redirect authenticated users to `/dashboard`
 - Redirect unauthenticated users to `/auth/signin`
 
 **`/src/pages/dashboard.astro`**
+
 - Require authentication, redirect to signin if not authenticated
 - Pass user email and ID to `DashboardLayout` component
 
 **`/src/pages/quiz/[id].astro`**
+
 - Require authentication with redirect
 - Replace `DEFAULT_USER_ID` with actual session user ID
 - Maintain existing quiz validation logic
@@ -61,10 +68,12 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **State**: email, password, isSubmitting, validation errors, auth errors
 
 **Validation**:
+
 - Email: Required, valid format
 - Password: Required (min 1 character for signin)
 
 **UI Elements**:
+
 - Email input (autocomplete="email")
 - Password input with show/hide toggle (autocomplete="current-password")
 - Submit button with loading state
@@ -80,11 +89,13 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **State**: email, password, confirmPassword, isSubmitting, registrationSuccess, validation errors, auth errors
 
 **Validation**:
+
 - Email: Required, valid format
 - Password: Min 8 chars, must contain uppercase, lowercase, and number
 - Confirm Password: Must match password
 
 **UI Elements**:
+
 - Email input (autocomplete="email")
 - Password input with show/hide toggle (autocomplete="new-password")
 - Confirm password input with show/hide toggle
@@ -156,6 +167,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Base**: `AuthError` extends Error with code and statusCode properties
 
 **Specific Errors**:
+
 1. `EmailAlreadyExistsError` (409 Conflict)
 2. `InvalidCredentialsError` (401 Unauthorized)
 3. `WeakPasswordError` (400 Bad Request)
@@ -169,6 +181,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Using**: Zod library
 
 **Schemas**:
+
 - `signUpBodySchema`: email, password, confirmPassword with validation rules
 - `signInBodySchema`: email, password
 
@@ -177,22 +190,26 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 ### 2.4 API Endpoints
 
 **POST /api/auth/signup**
+
 - Request: email, password, confirmPassword
 - Success (201): userId, email, emailConfirmationRequired
 - Errors: 400 (validation), 409 (email exists), 500 (server error)
 
 **POST /api/auth/signin**
+
 - Request: email, password
 - Success (200): userId, email, accessToken, refreshToken
 - Errors: 400 (validation), 401 (invalid credentials), 500 (server error)
 - Note: Sets session cookies automatically via Supabase
 
 **POST /api/auth/signout**
+
 - Request: none
 - Success (200): message
 - Note: Always returns success, clears session cookies
 
 **GET /api/auth/session**
+
 - Request: none
 - Success (200): authenticated flag, user data (if authenticated), expiresAt
 - Use Case: Client-side session validation
@@ -204,6 +221,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Current**: Adds supabase client to context.locals
 
 **Enhanced**:
+
 - Fetch session on every request via `supabase.auth.getSession()`
 - Add `session` to `context.locals.session` (Session or null)
 - Add `user` to `context.locals.user` with id and email (or null)
@@ -217,16 +235,19 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Helper Functions**:
 
 **`requireAuth(astro, options?)`**: For protected pages
+
 - Check `Astro.locals.user`
 - If not authenticated: Redirect to signin with optional return URL
 - If authenticated: Return user object
 
 **`requireGuest(astro, redirectTo?)`**: For auth pages
+
 - Check `Astro.locals.session`
 - If authenticated: Redirect to dashboard
 - If not authenticated: Continue
 
 **`requireAuthAPI(locals)`**: For API endpoints
+
 - Check `locals.user`
 - If not authenticated: Throw AuthenticationRequiredError
 - If authenticated: Return user object
@@ -236,6 +257,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Pattern**: Replace `DEFAULT_USER_ID` logic with `requireAuthAPI(locals)`
 
 **Affected Routes**:
+
 - `/api/quizzes/index.ts` (GET, POST)
 - `/api/quizzes/[id]/index.ts` (GET)
 - `/api/quizzes/[id]/abandon.ts` (POST)
@@ -249,6 +271,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 ### 2.8 Environment Variables
 
 **Required**:
+
 - `SUPABASE_URL`: Supabase project URL
 - `SUPABASE_KEY`: Supabase anonymous key
 - `SITE_URL`: Application URL for redirects
@@ -262,6 +285,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 ### 3.1 Supabase Auth Configuration
 
 **Dashboard Settings**:
+
 - Enable Email Provider: Yes
 - Confirm Email: No (MVP)
 - Session Duration: 7 days
@@ -269,10 +293,12 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 - Reuse Interval: 10 seconds
 
 **Password Requirements** (enforced by validation):
+
 - Minimum 8 characters
 - Must contain uppercase, lowercase, and number
 
 **Rate Limiting**:
+
 - Sign Up: 5 requests/hour per IP
 - Sign In: 10 requests/hour per email
 
@@ -283,6 +309,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **No Changes Required**: Schema already supports authentication
 
 **Tables**:
+
 - `auth.users`: Managed by Supabase (id, email, encrypted_password)
 - `quiz.user_id`: Already references `auth.users(id)`
 - `need_reviews.user_id`: Already references `auth.users(id)`
@@ -290,22 +317,26 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **RLS Policies**: Already configured, currently disabled for development
 
 **Migration Required**: Re-enable RLS policies before production
+
 - Create migration: `20260201000000_enable_rls_policies.sql`
 - Verify policies are active and enforced
 
 ### 3.3 Session Management
 
 **Storage**: HTTP-only cookies (managed by Supabase)
+
 - `sb-access-token`: JWT access token (1 hour lifetime)
 - `sb-refresh-token`: Refresh token (7 days lifetime)
 
 **Cookie Attributes**:
+
 - HttpOnly: Yes (prevents XSS)
 - Secure: Yes in production (HTTPS only)
 - SameSite: Lax
 - Path: /
 
 **Lifecycle**:
+
 - Creation: On signin/signup, Supabase sets cookies automatically
 - Validation: Middleware fetches session on every request
 - Refresh: Automatic by Supabase client when access token expires
@@ -318,6 +349,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Purpose**: Wrap API calls for React components
 
 **Functions**:
+
 - `signIn(email, password)`: POST to /api/auth/signin
 - `signUp(email, password)`: POST to /api/auth/signup
 - `signOut()`: POST to /api/auth/signout
@@ -330,11 +362,13 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Astro Configuration**: Already set to `output: "server"` with Node adapter
 
 **Page-Level Patterns**:
+
 - Protected pages: Use `requireAuth()` at top of component script
 - Guest-only pages: Use `requireGuest()` at top of component script
 - Optional auth: Check `Astro.locals.user` directly
 
 **Benefits**:
+
 - Server-side session validation before render
 - Immediate redirects without client-side flicker
 - Protected content never sent to unauthenticated users
@@ -348,10 +382,12 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 **Location**: Add to `/src/types.ts`
 
 **Command DTOs** (Request bodies):
+
 - `SignUpCommandDTO`: email, password, confirmPassword
 - `SignInCommandDTO`: email, password
 
 **Response DTOs**:
+
 - `SignUpResponseDTO`: userId, email, emailConfirmationRequired
 - `SignInResponseDTO`: userId, email, accessToken, refreshToken
 - `SessionDataDTO`: authenticated, user (id, email), expiresAt
@@ -359,6 +395,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 - `SessionResponseDTO`: Union of above
 
 **Error DTOs**:
+
 - `AuthErrorResponseDTO`: Extends ErrorResponseDTO with auth-specific codes
 
 ### 4.2 Component Props
@@ -417,12 +454,14 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 ### 5.4 Logging
 
 **Server-Side**:
+
 - Log all auth events (INFO): signup, signin, signout, session refresh
 - Log errors (WARN/ERROR): failed attempts, rate limits, service errors
 - Never log passwords or tokens
 - Include context: userId, email, IP, timestamp
 
 **Client-Side**:
+
 - Console errors in development
 - Send critical errors to monitoring (future)
 - Never log sensitive data
@@ -432,6 +471,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 ## 6. IMPLEMENTATION PLAN
 
 ### Phase 1: Foundation
+
 1. Create AuthService class
 2. Create error classes
 3. Create validation schemas
@@ -440,17 +480,20 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 6. Create auth guard utilities
 
 ### Phase 2: API Endpoints
+
 1. POST /api/auth/signup
 2. POST /api/auth/signin
 3. POST /api/auth/signout
 4. GET /api/auth/session
 
 ### Phase 3: UI Components
+
 1. SignUpForm component
 2. SignInForm component
 3. Update DashboardHeader with logout
 
 ### Phase 4: Pages
+
 1. /auth/signup page
 2. /auth/signin page
 3. Update /dashboard with auth guard
@@ -458,6 +501,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 5. Update /index with redirect logic
 
 ### Phase 5: Migration
+
 1. Remove DEFAULT_USER_ID from all files
 2. Apply RLS re-enable migration
 3. Update existing API routes with requireAuthAPI
@@ -465,6 +509,7 @@ This specification defines the authentication architecture for the Kanji Quiz ap
 5. Update environment documentation
 
 ### Phase 6: Deployment
+
 1. Manual testing of all flows
 2. Performance testing
 3. Security review
@@ -489,6 +534,7 @@ This specification provides a complete authentication architecture for Kanji Qui
 ✅ **Scalable**: Supports future enhancements (OAuth, MFA, password recovery)
 
 **MVP Deliverables**:
+
 - 2 authentication pages (signin, signup)
 - 2 React form components
 - 4 API endpoints

@@ -16,17 +16,20 @@ Backend – Supabase as a comprehensive backend solution:
 Testing – Comprehensive testing strategy:
 
 Unit Tests:
+
 - Vitest as the primary testing framework (native Vite integration, fast execution, ESM support)
 - Mock Service Worker (MSW) for API mocking in integration tests
 - Custom Supabase client mocking for service layer testing
 - v8 code coverage reporting
 
 Component Tests:
+
 - React Testing Library for component testing (encourages testing from user perspective)
 - Vitest as the test runner
 - Tests all components in `src/components/` with focus on user interactions
 
 End-to-End Tests:
+
 - Playwright for E2E testing (cross-browser support, excellent debugging, auto-waiting)
 - Tests complete user journeys across Chromium, Firefox, and WebKit
 - Page Object Model (POM) pattern for test organization

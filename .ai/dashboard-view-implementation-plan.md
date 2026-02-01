@@ -1,12 +1,15 @@
 # View Implementation Plan Dashboard
 
 ## 1. Overview
+
 The Dashboard view is the authenticated hub where users start level-based or need-review quizzes, manage their need-review list, and review completed quiz history with expandable details.
 
 ## 2. View Routing
+
 Route: `/dashboard`
 
 ## 3. Component Structure
+
 - `DashboardPage` (Astro page)
 - `DashboardLayout`
 - `DashboardHeader`
@@ -25,7 +28,9 @@ Route: `/dashboard`
 - `SectionSkeleton`
 
 ## 4. Component Details
+
 ### `DashboardPage` (Astro)
+
 - Component description: Page entry that wires layout, loads React island, and sets SEO title.
 - Main elements: `Layout.astro`, `main`, `DashboardLayout` React island.
 - Handled events: none (delegates to React).
@@ -34,6 +39,7 @@ Route: `/dashboard`
 - Props: none.
 
 ### `DashboardLayout`
+
 - Component description: Orchestrates data fetching and state, passes props to sections.
 - Main elements: container `div`, `DashboardHeader`, `QuizCreationSection`, `NeedReviewListSection`, `HistorySection`.
 - Handled events: initial load effects, refresh handlers for lists.
@@ -42,6 +48,7 @@ Route: `/dashboard`
 - Props: none.
 
 ### `DashboardHeader`
+
 - Component description: Persistent header showing user email and logout button.
 - Main elements: `header`, user email text, `Button` for logout.
 - Handled events: logout click.
@@ -50,6 +57,7 @@ Route: `/dashboard`
 - Props: `email: string`, `onLogout: () => void`.
 
 ### `QuizCreationSection`
+
 - Component description: Hosts two cards for quiz setup and start actions.
 - Main elements: `section`, grid of `LevelQuizCard` and `NeedReviewQuizCard`.
 - Handled events: forwards start actions to parent.
@@ -58,6 +66,7 @@ Route: `/dashboard`
 - Props: `levelForm`, `needReviewForm`, `onStartLevelQuiz`, `onStartNeedReviewQuiz`.
 
 ### `LevelQuizCard`
+
 - Component description: Level-based quiz configuration and start.
 - Main elements: `Card`, `Select` for level, `RadioGroup` or `ToggleGroup` for question count (10/20/50), `Button`.
 - Handled events: `onLevelChange`, `onQuestionCountChange`, `onStart`.
@@ -70,6 +79,7 @@ Route: `/dashboard`
 - Props: `formState`, `onChange`, `onSubmit`, `errorMessage`, `isSubmitting`.
 
 ### `NeedReviewQuizCard`
+
 - Component description: Need-review quiz configuration and start.
 - Main elements: `Card`, `RadioGroup` for question count, availability text, `Button`.
 - Handled events: `onQuestionCountChange`, `onStart`.
@@ -82,6 +92,7 @@ Route: `/dashboard`
 - Props: `formState`, `availableCount`, `onChange`, `onSubmit`, `errorMessage`, `isSubmitting`.
 
 ### `NeedReviewListSection`
+
 - Component description: Paginated list of need-review kanji with inline remove actions and a Start Quiz shortcut.
 - Main elements: `section`, header with count, `NeedReviewList`, `NeedReviewPagination`, optional `Button` for start.
 - Handled events: remove item, pagination change, start quiz shortcut.
@@ -92,6 +103,7 @@ Route: `/dashboard`
 - Props: `items`, `pagination`, `onRemove`, `onPaginate`, `onStartNeedReviewQuiz`, `isLoading`.
 
 ### `NeedReviewList`
+
 - Component description: Renders list or empty state.
 - Main elements: `ul`, `NeedReviewListItem`, empty placeholder.
 - Handled events: none (child handles remove).
@@ -100,6 +112,7 @@ Route: `/dashboard`
 - Props: `items`, `onRemove`, `isLoading`.
 
 ### `NeedReviewListItem`
+
 - Component description: Single need-review row with kanji info and remove action.
 - Main elements: `li`, kanji character, readings/meanings, `Button` remove.
 - Handled events: `onRemove(kanjiId)`.
@@ -108,6 +121,7 @@ Route: `/dashboard`
 - Props: `item`, `onRemove`, `isDeleting`.
 
 ### `NeedReviewPagination`
+
 - Component description: Pagination controls for need-review list.
 - Main elements: `nav`, previous/next buttons, status text.
 - Handled events: `onNext`, `onPrev`.
@@ -118,6 +132,7 @@ Route: `/dashboard`
 - Props: `pagination`, `onChange`.
 
 ### `HistorySection`
+
 - Component description: Completed quiz history with expandable details and pagination.
 - Main elements: `section`, `HistoryList`, `HistoryPagination`, "Show 10 more" button.
 - Handled events: pagination change, expand/collapse.
@@ -126,6 +141,7 @@ Route: `/dashboard`
 - Props: `items`, `pagination`, `onPaginate`, `isLoading`.
 
 ### `HistoryList`
+
 - Component description: Renders history or empty state.
 - Main elements: `Accordion`, `HistoryItemAccordion`, empty placeholder.
 - Handled events: none (child handles expand).
@@ -134,6 +150,7 @@ Route: `/dashboard`
 - Props: `items`, `isLoading`.
 
 ### `HistoryItemAccordion`
+
 - Component description: Expandable summary + details of a completed quiz.
 - Main elements: `AccordionItem`, summary row with badges, details list.
 - Handled events: expand/collapse.
@@ -142,6 +159,7 @@ Route: `/dashboard`
 - Props: `item`.
 
 ### `InlineAlert`
+
 - Component description: Reusable inline error or info message.
 - Main elements: `div` with `role="status"` or `role="alert"`.
 - Handled events: optional dismiss.
@@ -150,6 +168,7 @@ Route: `/dashboard`
 - Props: `variant`, `message`, `onDismiss`.
 
 ### `SectionSkeleton`
+
 - Component description: Skeleton loader for each section during data load.
 - Main elements: `Skeleton` blocks.
 - Handled events: none.
@@ -158,7 +177,9 @@ Route: `/dashboard`
 - Props: `variant`.
 
 ## 5. Types
+
 ### Existing DTOs (from `src/types.ts`)
+
 - `CreateQuizCommandDTO`
 - `QuizWithQuestionsDTO`
 - `QuizListResponseDTO`
@@ -171,6 +192,7 @@ Route: `/dashboard`
 - `PaginationDTO`
 
 ### New ViewModel Types
+
 - `DashboardViewState`
   - `levelForm: LevelQuizFormState`
   - `needReviewForm: NeedReviewQuizFormState`
@@ -215,6 +237,7 @@ Route: `/dashboard`
   - `email: string`
 
 ## 6. State Management
+
 - Use local React state in `DashboardLayout` with `useState` and `useEffect` for initial data load.
 - Custom hooks:
   - `useNeedReviewList({ limit, offset })`: fetches list, exposes `data`, `loading`, `error`, and `refresh`.
@@ -224,6 +247,7 @@ Route: `/dashboard`
 - Store form states for both quiz cards and update in controlled inputs.
 
 ## 7. API Integration
+
 - `GET /api/need-reviews?limit=&offset=`
   - Response: `NeedReviewListResponseDTO`
   - Action: populate need-review list + `availableCount` from `pagination.total`.
@@ -239,6 +263,7 @@ Route: `/dashboard`
   - Action: on success, navigate to `/quiz/[id]` using returned `id`.
 
 ## 8. User Interactions
+
 - Select level (N5–N1) and question count; Start creates level quiz and routes to `/quiz/[id]`.
 - Select question count for need-review quiz; Start creates need-review quiz and routes to `/quiz/[id]`.
 - Remove a kanji from need-review list; row disappears and count updates.
@@ -247,6 +272,7 @@ Route: `/dashboard`
 - Click "Show 10 more" to append next page of history results.
 
 ## 9. Conditions and Validation
+
 - Level quiz:
   - `level` required and must be `JLPTLevel`.
   - `question_count` required and must be 10/20/50.
@@ -263,6 +289,7 @@ Route: `/dashboard`
   - Use `status=completed` to satisfy US-014.
 
 ## 10. Error Handling
+
 - Show inline alert on section-level load errors (need-review/history).
 - Show inline validation error on quiz card when POST returns `VALIDATION_ERROR` or `INSUFFICIENT_KANJI`.
 - Show toast or inline alert on DELETE failure and rollback optimistic update.
@@ -270,6 +297,7 @@ Route: `/dashboard`
 - Use `aria-live` or `role="status"` for loading and error updates.
 
 ## 11. Implementation Steps
+
 1. Create `src/pages/dashboard.astro` that renders `Layout.astro` and mounts `DashboardLayout`.
 2. Build `DashboardLayout` React component with state, effects, and data hooks.
 3. Implement `QuizCreationSection`, `LevelQuizCard`, and `NeedReviewQuizCard` with controlled inputs and validation.

@@ -5,6 +5,7 @@ This document summarizes the testing environment setup completed for the Kanji Q
 ## Overview
 
 The project now has a complete testing infrastructure with:
+
 - **Unit Tests**: Vitest + React Testing Library
 - **E2E Tests**: Playwright with Page Object Model
 - **Coverage Reporting**: v8 coverage with HTML reports
@@ -14,6 +15,7 @@ The project now has a complete testing infrastructure with:
 ## Installed Dependencies
 
 ### Unit Testing
+
 ```json
 {
   "vitest": "^4.0.18",
@@ -30,6 +32,7 @@ The project now has a complete testing infrastructure with:
 ```
 
 ### E2E Testing
+
 ```json
 {
   "@playwright/test": "^1.58.1",
@@ -40,6 +43,7 @@ The project now has a complete testing infrastructure with:
 ## Configuration Files
 
 ### 1. `vitest.config.ts`
+
 - Configures Vitest test runner
 - Sets up jsdom environment for DOM testing
 - Configures path aliases (`@/` → `./src`)
@@ -47,6 +51,7 @@ The project now has a complete testing infrastructure with:
 - Includes/excludes appropriate files
 
 ### 2. `playwright.config.ts`
+
 - Configures Playwright E2E testing
 - Sets base URL to `http://localhost:4321`
 - Configures Chromium browser only (Desktop Chrome)
@@ -104,6 +109,7 @@ Added the following test scripts to `package.json`:
 ## Test Setup Features
 
 ### Unit Tests (`tests/setup.ts`)
+
 - Automatic cleanup after each test
 - Mock clearing after each test
 - Supabase environment variable mocking
@@ -112,6 +118,7 @@ Added the following test scripts to `package.json`:
 - `@testing-library/jest-dom` custom matchers
 
 ### E2E Tests
+
 - **Authentication Fixture** (`e2e/fixtures/auth.fixture.ts`):
   - Provides pre-authenticated page context
   - Handles login flow automatically
@@ -125,6 +132,7 @@ Added the following test scripts to `package.json`:
   - Promotes test reusability
 
 ### Mock Utilities
+
 - `createMockSupabaseClient()`: Full Supabase client mock
 - `mockAuthSuccess`: Successful auth response
 - `mockAuthError`: Auth error response
@@ -134,6 +142,7 @@ Added the following test scripts to `package.json`:
 `.github/workflows/tests.yml` includes:
 
 ### Jobs
+
 1. **unit-tests**: Runs Vitest with coverage
    - Uploads coverage to Codecov
    - Saves coverage artifacts
@@ -146,16 +155,19 @@ Added the following test scripts to `package.json`:
 3. **lint**: Runs ESLint and Prettier checks
 
 ### Triggers
+
 - Push to `main` or `dev` branches
 - Pull requests to `main` or `dev`
 
 ## VS Code Integration
 
 ### Updated Extensions (`.vscode/extensions.json`)
+
 - `vitest.explorer`: Vitest Test Explorer
 - `ms-playwright.playwright`: Playwright Test Runner
 
 ### Updated Settings (`.vscode/settings.json`)
+
 ```json
 {
   "vitest.enable": true,
@@ -168,7 +180,9 @@ Added the following test scripts to `package.json`:
 ## Updated Files
 
 ### `.gitignore`
+
 Added test-related entries:
+
 ```gitignore
 # testing
 coverage/
@@ -179,6 +193,7 @@ playwright/.cache/
 ```
 
 ### `README.md`
+
 - Added Testing section with commands
 - Added table of test scripts
 - Linked to comprehensive testing guides
@@ -205,6 +220,7 @@ Created comprehensive documentation:
 ## Verification
 
 ### Unit Tests
+
 ```bash
 ✓ All unit tests passing (4 tests)
 ✓ Coverage reporting works
@@ -213,6 +229,7 @@ Created comprehensive documentation:
 ```
 
 ### E2E Tests
+
 ```bash
 ✓ 5 E2E tests defined (2 files)
 ✓ Page Object Models created
@@ -225,16 +242,19 @@ Created comprehensive documentation:
 To start using the testing environment:
 
 1. **Run unit tests**:
+
    ```bash
    npm test
    ```
 
 2. **Run E2E tests** (requires app running):
+
    ```bash
    npm run test:e2e
    ```
 
 3. **Generate coverage report**:
+
    ```bash
    npm run test:coverage
    ```
@@ -247,6 +267,7 @@ To start using the testing environment:
 ## Environment Variables
 
 For local testing, you may want to create `.env.test`:
+
 ```bash
 PUBLIC_SUPABASE_URL=http://localhost:54321
 PUBLIC_SUPABASE_ANON_KEY=your-test-anon-key
@@ -258,6 +279,7 @@ TEST_USER_PASSWORD=testpassword123
 ## Coverage Goals
 
 Current coverage thresholds (70%):
+
 - Lines: 70%
 - Functions: 70%
 - Branches: 70%

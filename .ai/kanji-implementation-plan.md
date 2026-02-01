@@ -376,16 +376,21 @@ CREATE INDEX idx_kanji_level_id ON kanji(level, id);
 ## 9. Implementation Steps
 
 ### Step 1: Create Input Validation
+
 Create Zod schema in `src/lib/validation/kanji.validation.ts` to validate query parameters (`level`, `limit`, `offset`) with appropriate defaults and constraints.
 
 ### Step 2: Create Service Layer
+
 Implement `KanjiService` in `src/lib/services/kanji.service.ts` with a `getKanji()` method that queries Supabase, applies filters, handles pagination, and transforms entities to DTOs.
 
 ### Step 3: Create API Endpoint
+
 Implement `GET` handler in `src/pages/api/kanji/index.ts` that validates input, calls the service, and returns appropriate success or error responses.
 
 ### Step 4: Verify Infrastructure
+
 Ensure middleware initializes Supabase client in `locals.supabase` and type definitions in `src/env.d.ts` are correct.
 
 ### Step 5: Create Database Indexes
+
 Add migration for indexes on `level` column and composite `(level, id)` index to optimize queries.

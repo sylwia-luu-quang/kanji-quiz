@@ -5,6 +5,7 @@
 This endpoint creates a new quiz session for an authenticated user. It generates quiz questions by randomly selecting kanji characters based on either a specific JLPT level or the user's need-review list. Each selected kanji generates two questions: one for reading and one for meaning. The questions for each kanji are placed adjacently in the sequence but their order is randomized.
 
 **Key Features:**
+
 - Supports two quiz modes: level-based and need-review
 - Prevents duplicate kanji within a single quiz
 - Generates exactly 2 questions per kanji (reading + meaning)
@@ -14,12 +15,15 @@ This endpoint creates a new quiz session for an authenticated user. It generates
 ## 2. Request Details
 
 ### HTTP Method
+
 `POST`
 
 ### URL Structure
+
 `/api/quizzes`
 
 ### Authentication
+
 - **Required**: JWT token in Authorization header
 - **Format**: `Authorization: Bearer <jwt_token>`
 - **Validation**: Handled by Astro middleware (context.locals.supabase contains authenticated client)
@@ -27,6 +31,7 @@ This endpoint creates a new quiz session for an authenticated user. It generates
 ### Request Body
 
 **For level-based quiz:**
+
 ```json
 {
   "type": "level",
@@ -36,6 +41,7 @@ This endpoint creates a new quiz session for an authenticated user. It generates
 ```
 
 **For need-review quiz:**
+
 ```json
 {
   "type": "need_review",
@@ -46,10 +52,12 @@ This endpoint creates a new quiz session for an authenticated user. It generates
 ### Parameters
 
 **Required:**
+
 - `type` (string): Must be either `"level"` or `"need_review"`
 - `question_count` (number): Number of kanji to include (valid values: 1, 10, 20, 50; 1 for development)
 
 **Conditionally Required:**
+
 - `level` (string): Required when `type="level"`. Must be one of: "N5", "N4", "N3", "N2", "N1". Must be omitted when `type="need_review"`.
 
 ### Validation Rules
@@ -67,6 +75,7 @@ This endpoint creates a new quiz session for an authenticated user. It generates
 ## 3. Used Types
 
 ### Request Type
+
 ```typescript
 // From src/types.ts - Already defined
 type CreateQuizCommandDTO =
@@ -83,6 +92,7 @@ type CreateQuizCommandDTO =
 ```
 
 ### Response Type
+
 ```typescript
 // From src/types.ts - Already defined
 interface QuizWithQuestionsDTO extends QuizDTO {
@@ -100,6 +110,7 @@ type KanjiDTO = Omit<KanjiEntity, "readings" | "meanings"> & {
 ```
 
 ### Error Type
+
 ```typescript
 // From src/types.ts - Already defined
 interface ErrorResponseDTO {
@@ -110,6 +121,7 @@ interface ErrorResponseDTO {
 ```
 
 ### Zod Validation Schema
+
 ```typescript
 // To be created in src/lib/validation/quiz.validation.ts
 import { z } from "zod";
@@ -131,6 +143,7 @@ const createQuizSchema = z.discriminatedUnion("type", [
 ```
 
 ### Service Interface
+
 ```typescript
 // To be created in src/lib/services/quiz.service.ts
 interface CreateQuizParams {
@@ -156,6 +169,7 @@ interface QuestionPair {
 **Status Code**: `201 Created`
 
 **Response Body**:
+
 ```json
 {
   "id": 123,
@@ -211,16 +225,19 @@ interface QuestionPair {
 ### Error Responses
 
 #### 400 Bad Request
+
 **Scenarios**:
+
 - Invalid or missing `type`
 - Invalid `level` value
 - `level` provided when `type="need_review"`
 - `level` missing when `type="level"`
-   - **Invalid `question_count` (not 1, 10, 20, or 50)**
+  - **Invalid `question_count` (not 1, 10, 20, or 50)**
 - `question_count` exceeds available kanji
 - Malformed JSON
 
 **Example**:
+
 ```json
 {
   "error": "Insufficient kanji available. Requested: 50, Available: 30",
@@ -229,12 +246,15 @@ interface QuestionPair {
 ```
 
 #### 401 Unauthorized
+
 **Scenarios**:
+
 - Missing Authorization header
 - Invalid JWT token
 - Expired JWT token
 
 **Example**:
+
 ```json
 {
   "error": "Authentication required"
@@ -242,12 +262,15 @@ interface QuestionPair {
 ```
 
 #### 500 Internal Server Error
+
 **Scenarios**:
+
 - Database connection failure
 - Unexpected server error
 - Transaction rollback failure
 
 **Example**:
+
 ```json
 {
   "error": "Failed to create quiz. Please try again later."
@@ -290,24 +313,32 @@ interface QuestionPair {
 ### Detailed Service Logic
 
 #### Step 1: Count Available Kanji
+
 Query the database to count available kanji based on quiz type:
+
 - For level-based quizzes: Count kanji matching the specified JLPT level
 - For need-review quizzes: Count kanji in the user's need-review list
 - Use count-only query for efficiency (no data fetch needed)
 
 #### Step 2: Validate Count
+
 Compare available kanji count against requested question count:
+
 - If insufficient kanji available, throw InsufficientKanjiError
 - Error should include both requested and available counts for user feedback
 
 #### Step 3: Select Random Kanji
+
 Retrieve random kanji IDs without duplicates:
+
 - Use database-level randomization for efficiency (ORDER BY RANDOM())
 - Limit results to exactly question_count kanji
 - Apply appropriate filter (level or user's need-review list)
 
 #### Step 4: Create Quiz in Transaction
+
 Create quiz and questions atomically:
+
 - Insert quiz record with user_id, type, level, question_count, and in_progress status
 - Generate question pairs for each selected kanji (reading + meaning)
 - Randomize the order of questions within each pair
@@ -315,7 +346,9 @@ Create quiz and questions atomically:
 - Ensure transaction consistency (all-or-nothing)
 
 #### Step 5: Fetch Complete Quiz
+
 Retrieve the newly created quiz with all related data:
+
 - Fetch quiz record with nested questions
 - Include kanji details for each question
 - Use Supabase's nested select for efficient JOIN operations
@@ -324,20 +357,22 @@ Retrieve the newly created quiz with all related data:
 ### Question Generation Algorithm
 
 For each kanji (sequence represents pair position):
-1. Create reading question with sequence = (pair_index * 2) + 1
-2. Create meaning question with sequence = (pair_index * 2) + 2
+
+1. Create reading question with sequence = (pair_index \* 2) + 1
+2. Create meaning question with sequence = (pair_index \* 2) + 2
 3. Randomly swap the two questions (50% chance)
 
 **Example for 3 kanji:**
+
 ```
-Kanji A (id: 10): 
+Kanji A (id: 10):
   - Reading → sequence 1 or 2 (randomized)
   - Meaning → sequence 2 or 1 (randomized)
-  
+
 Kanji B (id: 25):
   - Reading → sequence 3 or 4 (randomized)
   - Meaning → sequence 4 or 3 (randomized)
-  
+
 Kanji C (id: 8):
   - Reading → sequence 5 or 6 (randomized)
   - Meaning → sequence 6 or 5 (randomized)
@@ -346,29 +381,35 @@ Kanji C (id: 8):
 ## 6. Security Considerations
 
 ### Authentication
+
 - **JWT Validation**: Middleware must verify the token before the handler is called
 - **User ID Extraction**: Extract `user_id` from the authenticated Supabase client, not from request body
 - **Token Expiration**: Reject expired tokens with 401 Unauthorized
 
 ### Authorization
+
 - **User Isolation**: Ensure quiz is created for the authenticated user only
 - **No Cross-User Access**: User cannot create quizzes for other users
 
 ### Input Validation
+
 - **Strict Schema Validation**: Use Zod discriminated unions to enforce conditional validation
 - **Whitelist Values**: Only accept predefined values for `type`, `level`, and `question_count`
 - **Type Safety**: Leverage TypeScript for compile-time type checking
 
 ### Resource Protection
+
 - **Question Count Limits**: Restrict to predefined values [1, 10, 20, 50] to prevent resource exhaustion (1 for development)
 - **Database Query Optimization**: Use indexes on `kanji.level` and `need_reviews.user_id`
 
 ### Data Integrity
+
 - **Transaction Safety**: Wrap quiz + questions creation in a transaction to prevent partial data
 - **Unique Constraints**: Database ensures no duplicate (quiz_id, kanji_id, question_type) combinations
 - **Foreign Key Constraints**: Database enforces referential integrity
 
 ### Error Handling
+
 - **No Internal Details**: Never expose database error messages or stack traces
 - **Generic Error Messages**: Return user-friendly messages for 500 errors
 - **Structured Logging**: Log detailed errors server-side for debugging
@@ -380,6 +421,7 @@ Kanji C (id: 8):
 #### Validation Errors (400 Bad Request)
 
 **Scenario**: Invalid request body
+
 ```typescript
 // Zod validation failure
 {
@@ -397,6 +439,7 @@ Kanji C (id: 8):
 ```
 
 **Scenario**: Insufficient kanji
+
 ```typescript
 {
   "error": "Insufficient kanji available for the requested quiz. Requested: 50, Available: 30",
@@ -405,6 +448,7 @@ Kanji C (id: 8):
 ```
 
 **Scenario**: Missing level for level-based quiz
+
 ```typescript
 {
   "error": "Level is required when type is 'level'",
@@ -413,6 +457,7 @@ Kanji C (id: 8):
 ```
 
 **Scenario**: Level provided for need-review quiz
+
 ```typescript
 {
   "error": "Level must not be provided when type is 'need_review'",
@@ -423,6 +468,7 @@ Kanji C (id: 8):
 #### Authentication Errors (401 Unauthorized)
 
 **Scenario**: Missing token
+
 ```typescript
 {
   "error": "Authentication required"
@@ -430,6 +476,7 @@ Kanji C (id: 8):
 ```
 
 **Scenario**: Invalid or expired token
+
 ```typescript
 {
   "error": "Invalid or expired authentication token"
@@ -439,6 +486,7 @@ Kanji C (id: 8):
 #### Database Errors (500 Internal Server Error)
 
 **Scenario**: Database connection failure
+
 ```typescript
 // Internal logging: Full error details
 console.error("Database error in QuizService.createQuiz:", error);
@@ -450,6 +498,7 @@ console.error("Database error in QuizService.createQuiz:", error);
 ```
 
 **Scenario**: Transaction failure
+
 ```typescript
 // Internal logging: Transaction rollback details
 console.error("Transaction failed in QuizService.createQuiz:", error);
@@ -495,12 +544,14 @@ export class InvalidQuizTypeError extends Error {
 ### Database Optimization
 
 #### Indexes (Already in Migration)
+
 - `kanji.level` - For fast level-based filtering
 - `need_reviews.user_id` - For fast user need-review lookup
 - `quiz_questions.quiz_id` - For fast question retrieval
 - `quiz_questions.kanji_id` - For foreign key lookup
 
 #### Query Optimization
+
 1. **Count Query**: Use `{ count: "exact", head: true }` to avoid fetching full data
 2. **Bulk Insert**: Insert all questions in a single batch operation
 3. **Single Fetch**: Retrieve complete quiz with questions in one query using Supabase's nested select
@@ -510,7 +561,6 @@ export class InvalidQuizTypeError extends Error {
 
 1. **Random Selection**: Shuffling large arrays can be slow
    - **Solution**: Use SQL `ORDER BY RANDOM() LIMIT N` for database-level randomization
-   
 2. **Large Question Sets**: Inserting 100 questions (50 kanji × 2) in one request
    - **Solution**: Use batch insert, not individual inserts
    - **Acceptable**: 100 inserts is well within PostgreSQL's capabilities
@@ -522,25 +572,26 @@ export class InvalidQuizTypeError extends Error {
 ### Optimization Strategies
 
 #### Use Database-Level Random Selection
+
 ```typescript
 // Instead of fetching all and shuffling in memory
 const { data: kanji } = await supabase
   .from("kanji")
   .select("id")
   .eq("level", level)
-  .order("random()")  // PostgreSQL random ordering
+  .order("random()") // PostgreSQL random ordering
   .limit(questionCount);
 ```
 
 #### Batch Question Insert
+
 ```typescript
 // Single insert with array of objects
-await supabase
-  .from("quiz_questions")
-  .insert(questions);  // Array of 20-100 question objects
+await supabase.from("quiz_questions").insert(questions); // Array of 20-100 question objects
 ```
 
 #### Optimize Question Generation
+
 ```typescript
 // Generate questions efficiently without creating intermediate arrays
 function generateQuestions(kanjiIds: number[], quizId: number) {
@@ -548,19 +599,19 @@ function generateQuestions(kanjiIds: number[], quizId: number) {
   kanjiIds.forEach((kanjiId, index) => {
     const baseSequence = index * 2 + 1;
     const shouldSwap = Math.random() < 0.5;
-    
+
     questions.push(
       {
         quiz_id: quizId,
         kanji_id: kanjiId,
         sequence: shouldSwap ? baseSequence + 1 : baseSequence,
-        question_type: "reading"
+        question_type: "reading",
       },
       {
         quiz_id: quizId,
         kanji_id: kanjiId,
         sequence: shouldSwap ? baseSequence : baseSequence + 1,
-        question_type: "meaning"
+        question_type: "meaning",
       }
     );
   });
@@ -571,6 +622,7 @@ function generateQuestions(kanjiIds: number[], quizId: number) {
 ## 9. Implementation Steps
 
 ### Step 1: Create Validation Schema
+
 **File**: `src/lib/validation/quiz.validation.ts`
 
 1. Import Zod
@@ -586,6 +638,7 @@ function generateQuestions(kanjiIds: number[], quizId: number) {
 ---
 
 ### Step 2: Create Custom Error Classes
+
 **File**: `src/lib/errors/quiz.errors.ts`
 
 1. Create `InsufficientKanjiError` class extending Error
@@ -599,6 +652,7 @@ function generateQuestions(kanjiIds: number[], quizId: number) {
 ---
 
 ### Step 3: Implement QuizService
+
 **File**: `src/lib/services/quiz.service.ts`
 
 1. **Setup**:
@@ -637,6 +691,7 @@ function generateQuestions(kanjiIds: number[], quizId: number) {
 ---
 
 ### Step 4: Create API Route Handler
+
 **File**: `src/pages/api/quizzes/index.ts`
 
 1. **Setup**:
@@ -673,6 +728,7 @@ function generateQuestions(kanjiIds: number[], quizId: number) {
 ---
 
 ### Step 5: Add Type Guards and Utilities
+
 **File**: `src/types.ts` (update existing)
 
 1. Verify existing type guards are sufficient:
@@ -689,6 +745,7 @@ function generateQuestions(kanjiIds: number[], quizId: number) {
 ---
 
 ### Step 6: Update Database Types (if needed)
+
 **File**: `src/db/database.types.ts`
 
 1. Verify types match database schema

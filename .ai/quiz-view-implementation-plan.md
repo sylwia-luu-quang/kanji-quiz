@@ -1,12 +1,15 @@
 # View Implementation Plan: Quiz
 
 ## 1. Overview
+
 The Quiz view is a full-screen, focused interface for sequential kanji practice. Users answer reading and meaning questions, receive immediate feedback, mark kanji for review, and can abandon or complete the quiz. After completion, a modal displays the final score.
 
 ## 2. View Routing
+
 Route: `/quiz/[id]`
 
 ## 3. Component Structure
+
 - `QuizPage` (Astro page)
 - `QuizContainer`
 - `QuizHeader`
@@ -30,6 +33,7 @@ Route: `/quiz/[id]`
 ## 4. Component Details
 
 ### `QuizPage` (Astro)
+
 - Component description: Page entry that loads quiz server-side, handles auth checks, and mounts React island with initial data.
 - Main elements: `Layout.astro`, `main`, `QuizContainer` React island.
 - Handled events: none (delegates to React).
@@ -38,6 +42,7 @@ Route: `/quiz/[id]`
 - Props: none.
 
 ### `QuizContainer`
+
 - Component description: Main React component managing quiz state, question navigation, API calls, and overall flow.
 - Main elements: `QuizHeader`, `QuizContent` (conditional), `CompletionModal` (conditional), error boundary, toast container.
 - Handled events: quiz abandonment, answer submission, navigation, completion, need review toggle.
@@ -46,6 +51,7 @@ Route: `/quiz/[id]`
 - Props: `initialQuiz: QuizWithQuestionsDTO`, `quizId: number`.
 
 ### `QuizHeader`
+
 - Component description: Fixed header with app title and abandon button.
 - Main elements: `header`, title text, `AbandonButton`.
 - Handled events: none (delegates to child).
@@ -54,6 +60,7 @@ Route: `/quiz/[id]`
 - Props: none.
 
 ### `AbandonButton`
+
 - Component description: Destructive button that opens confirmation dialog before abandoning quiz.
 - Main elements: `Button variant="destructive"`, `ConfirmationDialog`.
 - Handled events: `onClick` (open dialog), dialog `onConfirm`/`onCancel`.
@@ -62,6 +69,7 @@ Route: `/quiz/[id]`
 - Props: `onAbandon: () => Promise<void>`.
 
 ### `ConfirmationDialog`
+
 - Component description: Modal asking for user confirmation with warning message before abandoning.
 - Main elements: Dialog overlay, content, Cancel button, Confirm Abandon button.
 - Handled events: `onConfirm`, `onCancel`.
@@ -70,6 +78,7 @@ Route: `/quiz/[id]`
 - Props: `isOpen: boolean`, `onConfirm: () => void`, `onCancel: () => void`, `title: string`, `description: string`.
 
 ### `ProgressIndicator`
+
 - Component description: Visual progress bar and text indicator showing current question position.
 - Main elements: `div` (progress bar with CSS width %), `p` ("Question X of Y").
 - Handled events: none.
@@ -78,6 +87,7 @@ Route: `/quiz/[id]`
 - Props: `currentQuestionIndex: number`, `totalQuestions: number`.
 
 ### `CurrentQuestion`
+
 - Component description: Container for current question displaying kanji, input, feedback, and navigation.
 - Main elements: `KanjiDisplay`, `QuestionPrompt`, `AnswerInput`, `SubmitButton`, `FeedbackSection`, `NextQuestionButton`.
 - Handled events: answer submission, next navigation, need review toggle.
@@ -86,6 +96,7 @@ Route: `/quiz/[id]`
 - Props: `question: QuestionViewModel`, `onSubmitAnswer: (answer: string) => Promise<void>`, `onNextQuestion: () => void`, `onToggleNeedReview: (kanjiId, state) => Promise<void>`, `isLastQuestion: boolean`, `needReviewState: boolean`.
 
 ### `KanjiDisplay`
+
 - Component description: Large centered kanji character (120px desktop, responsive mobile).
 - Main elements: `div` with large text.
 - Handled events: none.
@@ -94,6 +105,7 @@ Route: `/quiz/[id]`
 - Props: `character: string`.
 
 ### `QuestionPrompt`
+
 - Component description: Dynamic prompt text based on question type.
 - Main elements: `p` with prompt ("What is the reading?" or "What does this kanji mean?").
 - Handled events: none.
@@ -102,6 +114,7 @@ Route: `/quiz/[id]`
 - Props: `questionType: QuestionType`.
 
 ### `AnswerInput`
+
 - Component description: Input field with WanaKana binding for reading questions, plain for meaning questions.
 - Main elements: `input type="text"`, placeholder, hint text (reading: "Type in hiragana or katakana").
 - Handled events: `onChange`, `onKeyDown` (Enter to submit).
@@ -110,6 +123,7 @@ Route: `/quiz/[id]`
 - Props: `questionType: QuestionType`, `value: string`, `onChange: (value: string) => void`, `onSubmit: () => void`, `disabled: boolean`.
 
 ### `SubmitButton`
+
 - Component description: Primary button to submit answer, disabled when empty or submitting.
 - Main elements: `Button variant="default"`, loading spinner.
 - Handled events: `onClick`.
@@ -118,6 +132,7 @@ Route: `/quiz/[id]`
 - Props: `onClick: () => void`, `disabled: boolean`, `isLoading: boolean`.
 
 ### `FeedbackSection`
+
 - Component description: Section shown after submission with correctness, correct answers, and need review toggle. Styled green/red. Includes aria-live region.
 - Main elements: `div`, `CorrectnessIndicator`, `CorrectAnswersList`, `NeedReviewToggle`.
 - Handled events: none (delegates to children).
@@ -126,6 +141,7 @@ Route: `/quiz/[id]`
 - Props: `feedback: QuestionFeedbackDTO`, `needReviewState: boolean`, `onToggleNeedReview: () => Promise<void>`.
 
 ### `CorrectnessIndicator`
+
 - Component description: Icon and text showing correctness (checkmark + "Correct!" or X + "Incorrect").
 - Main elements: icon, text with success/error colors.
 - Handled events: none.
@@ -134,6 +150,7 @@ Route: `/quiz/[id]`
 - Props: `isCorrect: boolean`.
 
 ### `CorrectAnswersList`
+
 - Component description: List of all acceptable correct answers.
 - Main elements: heading ("Correct answers:"), `ul` with `li` items.
 - Handled events: none.
@@ -142,6 +159,7 @@ Route: `/quiz/[id]`
 - Props: `correctAnswers: string[]`.
 
 ### `NeedReviewToggle`
+
 - Component description: Checkbox to mark/unmark kanji for review with optimistic updates.
 - Main elements: `label`, checkbox, text ("Mark for review"), loading spinner.
 - Handled events: `onChange`.
@@ -150,6 +168,7 @@ Route: `/quiz/[id]`
 - Props: `kanjiId: number`, `isMarked: boolean`, `onChange: (newState: boolean) => Promise<void>`.
 
 ### `NextQuestionButton`
+
 - Component description: Button to proceed to next question or finish quiz (last question).
 - Main elements: `Button variant="default"`, text ("Next Question" or "Finish Quiz").
 - Handled events: `onClick`.
@@ -158,6 +177,7 @@ Route: `/quiz/[id]`
 - Props: `onClick: () => void`, `isLastQuestion: boolean`.
 
 ### `CompletionModal`
+
 - Component description: Modal shown after completion with score, encouragement, and return button.
 - Main elements: Modal overlay, heading ("Quiz Complete!"), `ScoreSummary`, encouragement message, `ReturnToDashboardButton`.
 - Handled events: return to dashboard navigation.
@@ -166,6 +186,7 @@ Route: `/quiz/[id]`
 - Props: `score: number`, `correctCount: number`, `totalCount: number`, `onReturnToDashboard: () => void`.
 
 ### `ScoreSummary`
+
 - Component description: Visual score display with large percentage and counts. Color coded: green >80%, yellow 50-80%, red <50%.
 - Main elements: large percentage text, detailed count text.
 - Handled events: none.
@@ -174,6 +195,7 @@ Route: `/quiz/[id]`
 - Props: `scorePercent: number`, `correctCount: number`, `totalCount: number`.
 
 ### `ReturnToDashboardButton`
+
 - Component description: Primary button to navigate back to dashboard.
 - Main elements: `Button variant="default"`.
 - Handled events: `onClick` (navigate to `/dashboard`).
@@ -184,6 +206,7 @@ Route: `/quiz/[id]`
 ## 5. Types
 
 ### Existing DTOs (from `src/types.ts`)
+
 - `QuizWithQuestionsDTO`
 - `QuizQuestionDTO`
 - `KanjiDTO`
@@ -197,6 +220,7 @@ Route: `/quiz/[id]`
 - `QuizType`, `QuestionType`, `QuizStatus`, `JLPTLevel`
 
 ### New ViewModel Types
+
 - `QuizViewModel`
   - `quiz: QuizWithQuestionsDTO`
   - `currentQuestionIndex: number`
@@ -220,6 +244,7 @@ Route: `/quiz/[id]`
 - `QuestionState` enum: `UNANSWERED`, `SUBMITTING`, `FEEDBACK`, `READY_TO_PROCEED`
 
 ## 6. State Management
+
 - Use custom hook `useQuizState` in `src/components/hooks/useQuizState.ts` to centralize quiz state, API calls, and business logic.
 - State variables:
   - `quiz: QuizWithQuestionsDTO`
@@ -241,6 +266,7 @@ Route: `/quiz/[id]`
   - `refetchQuiz()`: re-fetches quiz from GET `/api/quizzes/:id`.
 
 ## 7. API Integration
+
 - `GET /api/quizzes/:id`
   - Response: `QuizWithQuestionsDTO`
   - Action: initial load (server-side) or refetch (client-side).
@@ -264,6 +290,7 @@ Route: `/quiz/[id]`
 - Create `src/lib/services/quiz-client.service.ts` with type-safe methods for all API calls.
 
 ## 8. User Interactions
+
 - Start quiz: Navigate to `/quiz/:id` from dashboard; server loads data, renders first unanswered question.
 - Answer question: Type answer, click Submit or press Enter; show loading, then feedback (green/red) with correct answers.
 - Mark for review: Click checkbox in feedback; optimistic update, API call, revert on error with toast.
@@ -275,6 +302,7 @@ Route: `/quiz/[id]`
 - Error recovery: Show toast with retry option; critical errors redirect to dashboard.
 
 ## 9. Conditions and Validation
+
 - Answer submission:
   - Answer must not be empty (`answer.trim().length > 0`).
   - Submit button disabled when answer empty.
@@ -296,6 +324,7 @@ Route: `/quiz/[id]`
   - Meaning: Plain input, hint "Type the English meaning", server validates against meanings.
 
 ## 10. Error Handling
+
 - Network errors: Toast "Network error. Please check your connection." with retry button.
 - Validation errors (400): Toast with specific message ("Answer cannot be empty", "This question has already been answered").
 - Auth errors (401): Redirect to sign-in with return URL, toast "Your session has expired."
@@ -313,6 +342,7 @@ Route: `/quiz/[id]`
   - Invalid quiz state on load: Show completion modal if completed, redirect if abandoned.
 
 ## 11. Implementation Steps
+
 1. Create `src/components/types/quiz-view.types.ts` with ViewModels.
 2. Create `src/lib/services/quiz-client.service.ts` with API methods.
 3. Create `src/components/hooks/useQuizState.ts` with state and actions.

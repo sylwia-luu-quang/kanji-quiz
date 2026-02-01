@@ -5,6 +5,7 @@
 **Purpose**: Retrieve a single quiz by ID with complete details including all questions, answers, and embedded kanji information. This endpoint is used for viewing quiz results after completion or reviewing quiz history details.
 
 **Key Features**:
+
 - Fetches a specific quiz record by ID
 - Includes all questions with their answers and correctness status
 - Embeds kanji details (character, level, readings, meanings) for each question
@@ -18,29 +19,33 @@
 ## 2. Request Details
 
 ### HTTP Method
+
 `GET`
 
 ### URL Structure
+
 `/api/quizzes/:id`
 
 ### Path Parameters
 
-| Parameter | Type     | Required | Description                                    | Constraints                          |
-|-----------|----------|----------|------------------------------------------------|--------------------------------------|
-| `id`      | `string` | Yes      | Quiz ID to retrieve (transformed to `bigint`) | Must be positive integer string      |
+| Parameter | Type     | Required | Description                                   | Constraints                     |
+| --------- | -------- | -------- | --------------------------------------------- | ------------------------------- |
+| `id`      | `string` | Yes      | Quiz ID to retrieve (transformed to `bigint`) | Must be positive integer string |
 
 ### Query Parameters
+
 None
 
 ### Request Headers
 
-| Header          | Required | Description                    | Example                  |
-|-----------------|----------|--------------------------------|--------------------------|
-| `Authorization` | Yes      | JWT Bearer token for auth      | `Bearer <jwt_token>`     |
+| Header          | Required | Description               | Example              |
+| --------------- | -------- | ------------------------- | -------------------- |
+| `Authorization` | Yes      | JWT Bearer token for auth | `Bearer <jwt_token>` |
 
 **Note**: Currently disabled in development (using `defaultUserId`). Must be implemented for production.
 
 ### Request Body
+
 None (GET request)
 
 ---
@@ -50,6 +55,7 @@ None (GET request)
 ### DTOs (from `src/types.ts`)
 
 **Response Type**:
+
 ```typescript
 QuizWithQuestionsDTO extends QuizDTO {
   questions: QuizQuestionDTO[];
@@ -57,6 +63,7 @@ QuizWithQuestionsDTO extends QuizDTO {
 ```
 
 **Embedded Types**:
+
 ```typescript
 // Base quiz data
 QuizDTO = QuizEntity (from database.types.ts)
@@ -111,6 +118,7 @@ export function parseGetQuizByIdParams(id: string): GetQuizByIdParams {
 **Content-Type**: `application/json`
 
 **Response Body**:
+
 ```json
 {
   "id": 123,
@@ -150,6 +158,7 @@ export function parseGetQuizByIdParams(id: string): GetQuizByIdParams {
 ### Error Responses
 
 #### 400 Bad Request
+
 Invalid quiz ID format (non-numeric, negative, or zero).
 
 ```json
@@ -163,6 +172,7 @@ Invalid quiz ID format (non-numeric, negative, or zero).
 ```
 
 #### 401 Unauthorized
+
 Missing or invalid authentication token.
 
 ```json
@@ -173,6 +183,7 @@ Missing or invalid authentication token.
 ```
 
 #### 403 Forbidden
+
 User doesn't own the quiz (RLS policy violation or manual check).
 
 ```json
@@ -186,6 +197,7 @@ User doesn't own the quiz (RLS policy violation or manual check).
 ```
 
 #### 404 Not Found
+
 Quiz doesn't exist in the database.
 
 ```json
@@ -199,6 +211,7 @@ Quiz doesn't exist in the database.
 ```
 
 #### 500 Internal Server Error
+
 Database errors or unexpected failures.
 
 ```json
@@ -245,6 +258,7 @@ Database errors or unexpected failures.
 ### Database Queries
 
 **Query 1: Fetch quiz with ownership verification**
+
 ```sql
 SELECT * FROM quiz
 WHERE id = $1 AND user_id = $2
@@ -252,6 +266,7 @@ LIMIT 1
 ```
 
 **Query 2 (if Query 1 returns null): Check if quiz exists**
+
 ```sql
 SELECT id FROM quiz
 WHERE id = $1
@@ -259,8 +274,9 @@ LIMIT 1
 ```
 
 **Query 3: Fetch questions with kanji data**
+
 ```sql
-SELECT 
+SELECT
   quiz_questions.*,
   kanji.*
 FROM quiz_questions
@@ -280,28 +296,33 @@ ORDER BY quiz_questions.sequence ASC
 ## 6. Security Considerations
 
 ### Authentication
+
 - **Requirement**: Valid JWT token in `Authorization` header
 - **Current State**: Disabled in development (using `defaultUserId`)
 - **Production Implementation**: Extract user ID from verified JWT token via `locals.supabase.auth.getUser()`
 - **Validation**: Return 401 if token is missing or invalid
 
 ### Authorization
+
 - **Requirement**: User must own the quiz they're requesting
 - **Implementation**: Filter query by both `quiz.id` AND `quiz.user_id`
 - **RLS Consideration**: RLS policies are disabled (migration 20260118170000), so manual authorization checks are required
 - **Error Response**: Return 403 if quiz exists but user doesn't own it
 
 ### Input Validation
+
 - **Path Parameter**: Validate quiz ID is positive integer using Zod schema
 - **SQL Injection**: Prevented via Supabase client's parameterized queries
 - **Type Safety**: TypeScript ensures type correctness throughout
 
 ### Data Exposure
+
 - **Principle**: Only return data for quizzes owned by authenticated user
 - **Implementation**: Always include `user_id` filter in queries
 - **Verification**: Double-check ownership before returning data
 
 ### Rate Limiting
+
 - **Recommendation**: Implement rate limiting at API gateway or middleware level
 - **Pattern**: Max 100 requests per minute per user for GET endpoints
 - **Not included in this implementation**: Should be handled by infrastructure
@@ -312,14 +333,14 @@ ORDER BY quiz_questions.sequence ASC
 
 ### Error Mapping Table
 
-| Error Type                | HTTP Status | Error Code        | User Message                                      |
-|---------------------------|-------------|-------------------|---------------------------------------------------|
-| `ZodError`                | 400         | VALIDATION_ERROR  | "Invalid quiz ID"                                 |
-| `QuizNotFoundError`       | 404         | QUIZ_NOT_FOUND    | "Quiz not found"                                  |
-| `QuizAccessDeniedError`   | 403         | ACCESS_DENIED     | "You do not have permission to access this quiz"  |
-| `QuizCreationError`       | 500         | DATABASE_ERROR    | "Failed to retrieve quiz"                         |
-| Missing user ID           | 500         | MISSING_USER_ID   | "User ID not available"                           |
-| Unknown errors            | 500         | SERVER_ERROR      | "Internal server error"                           |
+| Error Type              | HTTP Status | Error Code       | User Message                                     |
+| ----------------------- | ----------- | ---------------- | ------------------------------------------------ |
+| `ZodError`              | 400         | VALIDATION_ERROR | "Invalid quiz ID"                                |
+| `QuizNotFoundError`     | 404         | QUIZ_NOT_FOUND   | "Quiz not found"                                 |
+| `QuizAccessDeniedError` | 403         | ACCESS_DENIED    | "You do not have permission to access this quiz" |
+| `QuizCreationError`     | 500         | DATABASE_ERROR   | "Failed to retrieve quiz"                        |
+| Missing user ID         | 500         | MISSING_USER_ID  | "User ID not available"                          |
+| Unknown errors          | 500         | SERVER_ERROR     | "Internal server error"                          |
 
 ### Error Handling Strategy
 
@@ -347,6 +368,7 @@ ORDER BY quiz_questions.sequence ASC
 ### Error Response Format
 
 All errors follow the `ErrorResponseDTO` structure:
+
 ```typescript
 {
   error: string;      // Human-readable error message
@@ -410,6 +432,7 @@ All errors follow the `ErrorResponseDTO` structure:
 ### Bottleneck Analysis
 
 **Potential Bottlenecks**:
+
 1. JOIN query for questions + kanji (mitigated by indexes)
 2. JSONB deserialization (minimal impact, native Postgres support)
 3. N+1 query problem (avoided by using JOIN, not separate queries)
@@ -419,6 +442,7 @@ All errors follow the `ErrorResponseDTO` structure:
 ## 9. Implementation Steps
 
 ### Step 1: Add Validation Schema
+
 **File**: `src/lib/validation/quiz.validation.ts`
 
 1. Define `getQuizByIdParamsSchema` using Zod
@@ -431,6 +455,7 @@ All errors follow the `ErrorResponseDTO` structure:
 ---
 
 ### Step 2: Add Service Method
+
 **File**: `src/lib/services/quiz.service.ts`
 
 1. Add public method `getQuizById(quizId: number, userId: string): Promise<QuizWithQuestionsDTO>`
@@ -453,6 +478,7 @@ All errors follow the `ErrorResponseDTO` structure:
 ---
 
 ### Step 3: Create API Route Handler
+
 **File**: `src/pages/api/quizzes/[id].ts`
 
 1. Create new file with APIRoute export
@@ -503,4 +529,3 @@ All errors follow the `ErrorResponseDTO` structure:
 3. **Question Ordering**: Questions are ordered by `sequence` field (1-based). This ensures consistent ordering across requests.
 
 4. **Immutability**: Completed quizzes are immutable (status cannot change once completed). This makes them safe to cache aggressively.
-

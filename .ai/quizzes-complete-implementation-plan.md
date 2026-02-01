@@ -5,6 +5,7 @@
 The `POST /api/quizzes/:id/complete` endpoint marks a quiz as completed after the user has answered all questions. It performs validation to ensure all questions are answered, calculates the final score percentage, and updates the quiz status with a completion timestamp.
 
 **Key Responsibilities**:
+
 - Verify quiz ownership (user authorization)
 - Validate quiz is in completable state (not already completed)
 - Ensure all questions have been answered
@@ -13,6 +14,7 @@ The `POST /api/quizzes/:id/complete` endpoint marks a quiz as completed after th
 - Return the completed quiz entity
 
 **Business Rules**:
+
 - All questions must have `user_answer` and `answered_at` set
 - Score calculation: `(COUNT(is_correct=true) / question_count) * 100`
 - Quiz status must transition from `in_progress` to `completed`
@@ -26,15 +28,18 @@ The `POST /api/quizzes/:id/complete` endpoint marks a quiz as completed after th
 **URL Structure**: `/api/quizzes/:id/complete`
 
 **Path Parameters**:
+
 - `id` (required): Quiz ID as a positive integer (bigint from database)
 
 **Request Headers**:
+
 - `Authorization: Bearer <jwt_token>` (required for authentication)
-  - *Note: Currently using default user ID for development; JWT authentication to be implemented*
+  - _Note: Currently using default user ID for development; JWT authentication to be implemented_
 
 **Request Body**: None
 
 **Example Request**:
+
 ```bash
 POST /api/quizzes/123/complete
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -45,10 +50,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### DTOs
 
 **Response DTO**:
+
 - `QuizDTO` - The completed quiz entity (defined in `src/types.ts`)
+
   ```typescript
   export type QuizDTO = QuizEntity;
-  
+
   // QuizEntity includes:
   // - id: bigint
   // - user_id: uuid
@@ -62,6 +69,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   ```
 
 **Error Response DTO**:
+
 - `ErrorResponseDTO` (defined in `src/types.ts`)
   ```typescript
   export interface ErrorResponseDTO {
@@ -74,6 +82,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Validation Schema
 
 **Path Parameter Schema** (new, to be added to `src/lib/validation/quiz.validation.ts`):
+
 ```typescript
 export const completeQuizParamsSchema = z.object({
   id: z.string().regex(/^\d+$/, "Quiz ID must be a valid number").transform(Number),
@@ -85,6 +94,7 @@ export type CompleteQuizParams = z.infer<typeof completeQuizParamsSchema>;
 ### Service Interface
 
 **Service Method** (to be added to `QuizService` in `src/lib/services/quiz.service.ts`):
+
 ```typescript
 async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ```
@@ -98,6 +108,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 **Content-Type**: `application/json`
 
 **Body Structure**:
+
 ```json
 {
   "id": 123,
@@ -106,7 +117,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
   "level": "N5",
   "question_count": 10,
   "status": "completed",
-  "score_percent": 85.00,
+  "score_percent": 85.0,
   "created_at": "2026-01-18T10:00:00.000Z",
   "completed_at": "2026-01-18T10:05:32.000Z"
 }
@@ -115,6 +126,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ### Error Responses
 
 #### 400 Bad Request - Incomplete Quiz
+
 ```json
 {
   "error": "Cannot complete quiz. Not all questions have been answered.",
@@ -128,6 +140,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ```
 
 #### 401 Unauthorized - Missing/Invalid Authentication
+
 ```json
 {
   "error": "Authentication required",
@@ -136,6 +149,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ```
 
 #### 403 Forbidden - User Doesn't Own Quiz
+
 ```json
 {
   "error": "You do not have permission to complete this quiz",
@@ -147,6 +161,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ```
 
 #### 404 Not Found - Quiz Not Found
+
 ```json
 {
   "error": "Quiz not found",
@@ -158,6 +173,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ```
 
 #### 409 Conflict - Quiz Already Completed
+
 ```json
 {
   "error": "Quiz is already completed",
@@ -165,12 +181,13 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
   "details": {
     "quiz_id": 123,
     "completed_at": "2026-01-18T10:05:32.000Z",
-    "score_percent": 85.00
+    "score_percent": 85.0
   }
 }
 ```
 
 #### 500 Internal Server Error - Server Error
+
 ```json
 {
   "error": "Failed to complete quiz. Please try again later.",
@@ -225,6 +242,7 @@ async completeQuiz(quizId: number, userId: string): Promise<QuizDTO>
 ### Database Operations
 
 **1. Fetch Quiz (Single SELECT)**:
+
 ```sql
 SELECT * FROM quiz
 WHERE id = $1 AND user_id = $2
@@ -232,8 +250,9 @@ LIMIT 1;
 ```
 
 **2. Fetch Questions with Answer Status (Single SELECT with Aggregation)**:
+
 ```sql
-SELECT 
+SELECT
   COUNT(*) as total_questions,
   COUNT(user_answer) as answered_questions,
   COUNT(CASE WHEN is_correct = true THEN 1 END) as correct_answers
@@ -242,9 +261,10 @@ WHERE quiz_id = $1;
 ```
 
 **3. Update Quiz (Single UPDATE)**:
+
 ```sql
 UPDATE quiz
-SET 
+SET
   status = 'completed',
   score_percent = $1,
   completed_at = NOW()
@@ -264,11 +284,13 @@ RETURNING *;
 ### Authentication & Authorization
 
 **Authentication** (Status: 401):
+
 - JWT token required in `Authorization: Bearer <token>` header
 - User ID extracted from validated JWT token
-- *Development Mode*: Using default user ID from `supabase.client.ts`
+- _Development Mode_: Using default user ID from `supabase.client.ts`
 
 **Authorization** (Status: 403):
+
 - Verify quiz belongs to authenticated user via `quiz.user_id = authenticated_user_id`
 - Implemented at service layer before any state changes
 - Database-level verification in UPDATE query (double security)
@@ -276,11 +298,13 @@ RETURNING *;
 ### Input Validation
 
 **Path Parameter Validation**:
+
 - Quiz ID must be a valid positive integer
 - Use Zod schema to validate and transform string to number
 - Prevent SQL injection via parameterized queries (handled by Supabase client)
 
 **State Validation**:
+
 - Quiz must exist (404 if not found)
 - Quiz must be in `in_progress` status (409 if `completed` or `abandoned`)
 - All questions must be answered (400 if incomplete)
@@ -288,17 +312,20 @@ RETURNING *;
 ### Data Integrity
 
 **Database Constraints**:
+
 - Foreign key constraint: `quiz.user_id` references `auth.users(id)`
 - Check constraint: `status = 'completed'` implies `completed_at IS NOT NULL`
 - Check constraint: `question_count > 0`
 
 **Transaction Safety**:
+
 - Wrap all operations in a transaction to prevent partial updates
 - Use optimistic locking via user_id in WHERE clause
 
 ### Rate Limiting
 
 **Considerations**:
+
 - Single quiz can only be completed once (enforced by status check)
 - Natural rate limiting through quiz lifecycle
 - No additional rate limiting needed for this endpoint
@@ -318,7 +345,10 @@ export class QuizNotFoundError extends Error {
 }
 
 export class QuizAccessDeniedError extends Error {
-  constructor(public readonly quizId: number, public readonly userId: string) {
+  constructor(
+    public readonly quizId: number,
+    public readonly userId: string
+  ) {
     super(`User ${userId} does not have permission to access quiz ${quizId}`);
     this.name = "QuizAccessDeniedError";
   }
@@ -340,15 +370,16 @@ export class IncompleteQuizError extends Error {
     public readonly totalQuestions: number,
     public readonly answeredQuestions: number
   ) {
-    super(
-      `Cannot complete quiz. ${answeredQuestions} of ${totalQuestions} questions answered.`
-    );
+    super(`Cannot complete quiz. ${answeredQuestions} of ${totalQuestions} questions answered.`);
     this.name = "IncompleteQuizError";
   }
 }
 
 export class QuizCompletionError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
     super(message);
     this.name = "QuizCompletionError";
   }
@@ -358,11 +389,13 @@ export class QuizCompletionError extends Error {
 ### Error Handling Strategy
 
 **Service Layer** (`QuizService.completeQuiz`):
+
 - Throw specific error classes for different failure scenarios
 - Include relevant context in error objects
 - Let errors bubble up to API route layer
 
 **API Route Layer** (`/api/quizzes/[id]/complete.ts`):
+
 - Catch specific error types and map to appropriate HTTP status codes
 - Format errors into `ErrorResponseDTO` structure
 - Include helpful details for debugging
@@ -370,25 +403,27 @@ export class QuizCompletionError extends Error {
 
 ### Error Response Mapping
 
-| Error Type | HTTP Status | Error Code | Response Details |
-|------------|-------------|------------|------------------|
-| `ZodError` | 400 | `VALIDATION_ERROR` | Field-specific validation errors |
-| `IncompleteQuizError` | 400 | `INCOMPLETE_QUIZ` | Question counts and status |
-| Missing User ID | 401 | `UNAUTHORIZED` | Generic auth message |
-| `QuizAccessDeniedError` | 403 | `QUIZ_ACCESS_DENIED` | Quiz ID |
-| `QuizNotFoundError` | 404 | `QUIZ_NOT_FOUND` | Quiz ID |
-| `QuizAlreadyCompletedError` | 409 | `QUIZ_ALREADY_COMPLETED` | Completion details |
-| `QuizCompletionError` | 500 | `QUIZ_COMPLETION_ERROR` | Generic error message |
-| Unknown Error | 500 | `SERVER_ERROR` | Generic error message |
+| Error Type                  | HTTP Status | Error Code               | Response Details                 |
+| --------------------------- | ----------- | ------------------------ | -------------------------------- |
+| `ZodError`                  | 400         | `VALIDATION_ERROR`       | Field-specific validation errors |
+| `IncompleteQuizError`       | 400         | `INCOMPLETE_QUIZ`        | Question counts and status       |
+| Missing User ID             | 401         | `UNAUTHORIZED`           | Generic auth message             |
+| `QuizAccessDeniedError`     | 403         | `QUIZ_ACCESS_DENIED`     | Quiz ID                          |
+| `QuizNotFoundError`         | 404         | `QUIZ_NOT_FOUND`         | Quiz ID                          |
+| `QuizAlreadyCompletedError` | 409         | `QUIZ_ALREADY_COMPLETED` | Completion details               |
+| `QuizCompletionError`       | 500         | `QUIZ_COMPLETION_ERROR`  | Generic error message            |
+| Unknown Error               | 500         | `SERVER_ERROR`           | Generic error message            |
 
 ### Logging Strategy
 
 **Service Layer Logging**:
+
 - Log error details with context (quiz ID, user ID, error type)
 - Use structured logging for easier debugging
 - Log database errors with sanitized details
 
 **API Layer Logging**:
+
 - Log all 500 errors for monitoring
 - Log 403 errors for security auditing
 - Consider logging 409 errors for user behavior analysis
@@ -398,6 +433,7 @@ export class QuizCompletionError extends Error {
 ### Database Performance
 
 **Query Optimization**:
+
 - Use single aggregation query to fetch question statistics
 - Leverage existing indexes:
   - Primary key index on `quiz(id)`
@@ -405,6 +441,7 @@ export class QuizCompletionError extends Error {
   - Foreign key index on `quiz_questions(quiz_id)`
 
 **Expected Query Performance**:
+
 - Quiz lookup: < 5ms (indexed primary key)
 - Question aggregation: < 10ms (indexed foreign key)
 - Quiz update: < 5ms (indexed primary key)
@@ -419,6 +456,7 @@ export class QuizCompletionError extends Error {
 ### Scalability Considerations
 
 **Current Scale**:
+
 - Endpoint is idempotent after first success (returns 409 on retry)
 - No expensive operations (joins, full table scans)
 - Minimal data transfer
@@ -468,6 +506,7 @@ export class QuizCompletionError extends Error {
 This implementation plan provides comprehensive guidance for implementing the `POST /api/quizzes/:id/complete` endpoint. The endpoint follows established patterns in the codebase, uses proper error handling, validates all inputs, and ensures data integrity through careful authorization and state management.
 
 **Key Features**:
+
 - ✅ Comprehensive error handling with specific error types
 - ✅ Proper HTTP status codes for all scenarios
 - ✅ Authorization at both service and database level
@@ -477,6 +516,7 @@ This implementation plan provides comprehensive guidance for implementing the `P
 - ✅ Detailed documentation and comments
 
 **Security**:
+
 - ✅ Authentication required (JWT Bearer token)
 - ✅ Authorization verified (user ownership check)
 - ✅ Input validation (path parameter)
@@ -484,6 +524,7 @@ This implementation plan provides comprehensive guidance for implementing the `P
 - ✅ SQL injection prevention (parameterized queries)
 
 **Performance**:
+
 - ✅ Optimized database queries (3-4 queries total)
 - ✅ Efficient aggregation for score calculation
 - ✅ Index usage for all queries

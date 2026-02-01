@@ -5,6 +5,7 @@
 Kanji Quiz uses a dashboard-centric architecture for short, repeatable practice sessions. Authenticated users land on a single Dashboard hub with three stacked sections (Quiz Creation, Need Review List, History). The Quiz experience is a focused, full-screen flow with minimal chrome and sequential questions. Authentication is handled via dedicated sign-in and sign-up pages. Persistent header navigation appears across authenticated views to show user identity and logout access.
 
 Key requirements from the PRD:
+
 - Level-based quiz configuration (level N5–N1, question count 10/20/50) with validation for insufficient kanji.
 - Sequential quiz flow with single kanji, immediate feedback, and per-question hit/miss tracking.
 - Need review marking and a dedicated quiz mode from the marked list.
@@ -14,6 +15,7 @@ Key requirements from the PRD:
 - Minimal PII and secure handling of auth and errors.
 
 Main API endpoints and purposes:
+
 - `GET /api/kanji` + `GET /api/kanji/:id`: Kanji data for quiz creation validation and details.
 - `POST /api/quizzes`: Create new quiz (level or need-review).
 - `GET /api/quizzes`: History list (completed quizzes).
@@ -26,6 +28,7 @@ Main API endpoints and purposes:
 - `DELETE /api/need-reviews/:kanjiId`: Remove kanji from need review.
 
 Global UX, accessibility, and security principles:
+
 - Keyboard-first navigation with visible focus states and predictable tab order.
 - Clear inline validation with aria-live announcements; toast notifications for transient errors; modal dialogs for critical auth errors.
 - Route guards on authenticated views; generic auth error messaging to avoid account enumeration.
@@ -34,6 +37,7 @@ Global UX, accessibility, and security principles:
 ## 2. View List
 
 ### Landing / Redirect
+
 - View name: Landing Redirect
 - View path: `/`
 - Main purpose: Route users to `/dashboard` when authenticated or `/auth/signin` when not.
@@ -44,6 +48,7 @@ Global UX, accessibility, and security principles:
 - Mapped requirements/user stories: US-002, US-015 (session correctness).
 
 ### Authentication: Sign In
+
 - View name: Sign In
 - View path: `/auth/signin`
 - Main purpose: Authenticate returning users.
@@ -55,6 +60,7 @@ Global UX, accessibility, and security principles:
 - Edge/error states: Invalid credentials; network timeouts; session already active (redirect).
 
 ### Authentication: Sign Up
+
 - View name: Sign Up
 - View path: `/auth/signup`
 - Main purpose: Register new users.
@@ -66,6 +72,7 @@ Global UX, accessibility, and security principles:
 - Edge/error states: Email already in use; weak password; network errors.
 
 ### Dashboard (Authenticated Hub)
+
 - View name: Dashboard
 - View path: `/dashboard`
 - Main purpose: Central hub for quiz creation, need review list, and history.
@@ -86,6 +93,7 @@ Global UX, accessibility, and security principles:
 - Edge/error states: Need review list empty; insufficient kanji for level; history empty; API errors (toast + retry).
 
 ### Quiz Experience
+
 - View name: Quiz
 - View path: `/quiz/[id]`
 - Main purpose: Conduct a single quiz session with sequential questions and immediate feedback.
@@ -110,6 +118,7 @@ Global UX, accessibility, and security principles:
 - Edge/error states: Question already answered; quiz already completed; lost session (re-fetch); invalid input (non-kana); network failures during answer submit (retry toast).
 
 ### History Detail (Embedded in Dashboard)
+
 - View name: History Detail (Accordion Item)
 - View path: `/dashboard` (embedded)
 - Main purpose: Show per-quiz question results and answers.
@@ -121,6 +130,7 @@ Global UX, accessibility, and security principles:
 - Edge/error states: Quiz not found; unauthorized; empty result set.
 
 ### Global Error and Empty States (System Surfaces)
+
 - View name: Error Boundary / Not Found / Empty States
 - View path: Global (applies to all views)
 - Main purpose: Provide consistent recovery for unhandled errors and missing data.
@@ -133,6 +143,7 @@ Global UX, accessibility, and security principles:
 ## 3. User Journey Map
 
 Primary journey: First-time quiz completion
+
 1. User lands on `/` and is routed to `/auth/signup`.
 2. User signs up, then auto-redirects to `/dashboard`.
 3. User selects level and question count in Level-Based Quiz card.
@@ -142,15 +153,18 @@ Primary journey: First-time quiz completion
 7. History updates with the completed quiz; need review list reflects any marked kanji.
 
 Secondary journey: Need review focused practice
+
 1. User opens `/dashboard`, sees need review list.
 2. User starts a Need Review quiz with available count.
 3. Quiz proceeds as above; completion returns to dashboard.
 
 Secondary journey: History exploration
+
 1. User expands a history accordion item.
 2. UI loads quiz details and displays per-question results.
 
 Recovery journey: Abandon quiz
+
 1. User clicks “Abandon Quiz” in header.
 2. Confirmation dialog appears; on confirm, quiz is abandoned and user returns to dashboard.
 

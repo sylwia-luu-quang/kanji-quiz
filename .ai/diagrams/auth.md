@@ -194,7 +194,7 @@ sequenceDiagram
 
 1. **Przeglądarka**: Renderuje komponenty React (SignInForm, SignUpForm), zarządza interakcją użytkownika, przechowuje cookies sesji
 2. **Middleware**: Przechwytuje wszystkie żądania, weryfikuje sesję, dodaje dane użytkownika do context.locals
-3. **Astro API**: Backend endpoints (/api/auth/*), zarządza logiką biznesową przez AuthService, waliduje dane
+3. **Astro API**: Backend endpoints (/api/auth/\*), zarządza logiką biznesową przez AuthService, waliduje dane
 4. **Supabase Auth**: Zarządza użytkownikami, sesjami, tokenami, automatycznie odświeża tokeny
 
 ### Przepływy autentykacji

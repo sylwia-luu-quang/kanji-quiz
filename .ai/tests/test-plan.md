@@ -3,9 +3,11 @@
 ## 1. Introduction and Testing Objectives
 
 ### 1.1 Purpose
+
 This test plan outlines the comprehensive testing strategy for the Kanji Quiz application, a web-based platform designed to help Japanese-language learners prepare for JLPT (Japanese Language Proficiency Test) exams through quick, focused kanji practice sessions.
 
 ### 1.2 Testing Objectives
+
 - **Functional Correctness**: Verify all user stories and acceptance criteria from the PRD are implemented correctly
 - **Data Integrity**: Ensure quiz questions, answers, and user progress are accurately stored and retrieved
 - **Security Validation**: Confirm authentication, authorization, and Row-Level Security (RLS) policies function as designed
@@ -15,15 +17,16 @@ This test plan outlines the comprehensive testing strategy for the Kanji Quiz ap
 - **API Contract Compliance**: Ensure all REST API endpoints meet their specifications
 
 ### 1.3 Success Criteria
+
 - All critical and high-priority test cases pass
 - Zero critical or high-severity bugs in production-ready builds
-
 
 ## 2. Test Scope
 
 ### 2.1 In-Scope Features
 
 #### Authentication & Authorization
+
 - User registration with email/password
 - User sign-in with email/password
 - User sign-out
@@ -33,6 +36,7 @@ This test plan outlines the comprehensive testing strategy for the Kanji Quiz ap
 - Unauthorized access prevention
 
 #### Quiz Management
+
 - Quiz creation (level-based and need-review modes)
 - Random kanji selection without duplicates
 - Question pair generation (reading + meaning per kanji)
@@ -43,16 +47,19 @@ This test plan outlines the comprehensive testing strategy for the Kanji Quiz ap
 - Quiz history retrieval
 
 #### Kanji Data Access
+
 - Kanji list retrieval with filtering by JLPT level
 - Pagination support
 
 #### Need Review Functionality
+
 - Adding kanji to need-review list
 - Removing kanji from need-review list
 - Viewing need-review list with pagination
 - Creating quizzes from need-review list
 
 #### User Interface Components
+
 - Dashboard with quiz creation options
 - Quiz view with question display
 - Answer input with Japanese character support
@@ -62,6 +69,7 @@ This test plan outlines the comprehensive testing strategy for the Kanji Quiz ap
 - Need-review list management
 
 #### Data Validation
+
 - Request body validation (Zod schemas)
 - Path parameter validation
 - Query parameter validation
@@ -70,6 +78,7 @@ This test plan outlines the comprehensive testing strategy for the Kanji Quiz ap
 ### 2.2 Out-of-Scope
 
 The following features are explicitly excluded from MVP testing:
+
 - Spaced repetition algorithms
 - Audio/phonetics functionality
 - Social features (sharing, leaderboards)
@@ -83,6 +92,7 @@ The following features are explicitly excluded from MVP testing:
 ### 2.3 Testing Priorities
 
 **Priority 1 (Critical)**: Must pass before release
+
 - Authentication and authorization flows
 - Quiz creation and question generation
 - Answer validation and scoring
@@ -90,6 +100,7 @@ The following features are explicitly excluded from MVP testing:
 - Core API endpoints functionality
 
 **Priority 2 (High)**: Required for acceptable user experience
+
 - Need-review list management
 - Quiz history and completion flow
 - Error handling and user feedback
@@ -97,6 +108,7 @@ The following features are explicitly excluded from MVP testing:
 - UI component functionality
 
 **Priority 3 (Medium)**: Important but not blocking
+
 - Pagination functionality
 - Edge case handling
 - Browser compatibility
@@ -107,6 +119,7 @@ The following features are explicitly excluded from MVP testing:
 ### 3.1 Unit Tests
 
 **Scope**:
+
 - **Service Layer** (`src/lib/services/`)
   - `auth.service.ts`: Sign-up, sign-in, sign-out, session management
   - `quiz.service.ts`: Quiz creation, question generation, answer validation, scoring
@@ -129,22 +142,23 @@ The following features are explicitly excluded from MVP testing:
 **Testing Framework**: Vitest (recommended for Vite/Astro projects)
 
 **Test Structure**:
+
 ```typescript
-describe('QuizService', () => {
-  describe('createQuiz', () => {
-    it('should create a level-based quiz with correct number of questions', async () => {
+describe("QuizService", () => {
+  describe("createQuiz", () => {
+    it("should create a level-based quiz with correct number of questions", async () => {
       // Arrange: Mock Supabase client, prepare test data
       // Act: Call service method
       // Assert: Verify quiz structure, question count, randomization
     });
 
-    it('should throw InsufficientKanjiError when not enough kanji available', async () => {
+    it("should throw InsufficientKanjiError when not enough kanji available", async () => {
       // Test error handling
     });
   });
 
-  describe('submitAnswer', () => {
-    it('should validate answer case-insensitively', async () => {
+  describe("submitAnswer", () => {
+    it("should validate answer case-insensitively", async () => {
       // Test answer validation logic
     });
   });
@@ -154,6 +168,7 @@ describe('QuizService', () => {
 ### 3.2 Integration Tests
 
 **Scope**:
+
 - **API Endpoints** (all routes in `src/pages/api/`)
   - Authentication endpoints (`/api/auth/*`)
   - Quiz endpoints (`/api/quizzes/*`)
@@ -173,12 +188,14 @@ describe('QuizService', () => {
   - Session injection into context
 
 **Testing Approach**:
+
 - Use Supabase local development environment (Docker)
 - Seed test data using migrations
 - Test with actual HTTP requests
 - Verify database state changes
 
 **Test Categories**:
+
 1. **Happy Path Tests**: Valid requests with expected success responses
 2. **Authorization Tests**: Verify RLS prevents unauthorized access
 3. **Validation Tests**: Invalid input returns appropriate 400 errors
@@ -190,6 +207,7 @@ describe('QuizService', () => {
 **Testing Framework**: Playwright (recommended for Astro)
 
 **Scope**:
+
 - **Complete User Journeys**
   - New user registration → first quiz → completion
   - Sign-in → create need-review quiz → complete
@@ -236,11 +254,11 @@ describe('QuizService', () => {
    - CORS policy validation
 
 **Testing Methodology**:
+
 - Manual penetration testing
 - Automated security scanning (OWASP ZAP)
 - Code review for security anti-patterns
 - Supabase RLS policy testing with different user contexts
-
 
 ### 3.5 UI Component Tests
 
@@ -251,6 +269,7 @@ describe('QuizService', () => {
 **Component Testing Priorities**:
 
 **Priority 1 (Critical Components)**:
+
 - `QuizContainer.tsx`: Quiz state management
 - `AnswerInput.tsx`: Input handling and validation
 - `FeedbackSection.tsx`: Correct/incorrect display
@@ -258,6 +277,7 @@ describe('QuizService', () => {
 - `NeedReviewToggle.tsx`: Toggle state management
 
 **Priority 2 (High Priority)**:
+
 - `DashboardLayout.tsx`: Layout and navigation
 - `QuizHeader.tsx`: Progress display
 - `HistoryList.tsx`: Quiz history rendering
@@ -267,6 +287,7 @@ describe('QuizService', () => {
 ### 3.6 Database Tests
 
 **Scope**:
+
 - Migration integrity
 - Constraint enforcement
 - RLS policy validation
@@ -274,6 +295,7 @@ describe('QuizService', () => {
 - Data type validation
 
 **Test Approach**:
+
 - Use Supabase local dev with test database
 - Reset database between test suites
 - Seed controlled test data
@@ -305,21 +327,23 @@ describe('QuizService', () => {
 ### 4.1 Unit and Integration Testing
 
 **Primary Framework**: Vitest
+
 - **Rationale**: Native Vite integration, fast execution, ESM support
-- **Features Used**: 
+- **Features Used**:
   - Describe/it blocks for test organization
   - Mock functions and module mocking
   - Snapshot testing
   - Code coverage reporting (v8)
 
 **Mocking Libraries**:
+
 - **Supabase Mocking**: Custom mock factory for Supabase client
 - **MSW (Mock Service Worker)**: API mocking for integration tests
-
 
 ### 4.2 Component Testing
 
 **Framework**: React Testing Library + Vitest
+
 - **Rationale**: Encourages testing from user perspective, no implementation details
 - **Key Utilities**:
   - `render()`: Render components
@@ -330,6 +354,7 @@ describe('QuizService', () => {
 ### 4.3 End-to-End Testing
 
 **Framework**: Playwright
+
 - **Rationale**: Cross-browser support, excellent debugging, auto-waiting
 - **Browsers**: Chromium, Firefox, WebKit
 - **Features**:
@@ -355,11 +380,13 @@ describe('QuizService', () => {
 ### 4.5 Code Quality Tools
 
 **Linting & Formatting**:
+
 - **ESLint**: JavaScript/TypeScript linting (with Astro, React plugins)
 - **Prettier**: Code formatting
 - **TypeScript Compiler**: Type checking
 
 **Pre-commit Hooks**:
+
 - **Husky**: Git hook management
 - **lint-staged**: Run linters on staged files
 
@@ -368,25 +395,30 @@ describe('QuizService', () => {
 ### 7.1 Development Phase (Ongoing)
 
 **Unit Tests**: Continuous (TDD approach)
+
 - Written alongside feature development
 - Executed on file save (watch mode)
 - Must pass before commit
 
 **Component Tests**: Per component completion
+
 - Written when component is feature-complete
 - Covers all props and interaction scenarios
 
 **Integration Tests**: Per feature completion
+
 - API endpoint tests after endpoint implementation
 - Database tests after schema changes
 
 ### 7.2 Sprint Cycle (2-week sprints)
 
 **Week 1**:
+
 - Day 1-3: Feature development + unit tests
 - Day 4-5: Integration tests for completed features
 
 **Week 2**:
+
 - Day 1-2: Component tests
 - Day 3: E2E test scenarios for new features
 - Day 4: Bug fixes and test updates
@@ -395,20 +427,24 @@ describe('QuizService', () => {
 ### 7.3 Pre-Release Testing
 
 **Feature Freeze** (1 week before release):
+
 - All feature development stops
 - Bug fixes only
 
 **Regression Testing** (Days 1-3):
+
 - Full E2E suite execution (all browsers)
 - Performance testing on staging
 - Security scanning
 - Accessibility audit
 
 **UAT** (Days 4-5):
+
 - Stakeholder testing
 - Acceptance sign-off
 
 **Release Readiness** (Day 6-7):
+
 - Smoke tests on production-like environment
 - Final performance validation
 - Deployment dry-run
@@ -416,11 +452,13 @@ describe('QuizService', () => {
 ### 7.4 Post-Release
 
 **Deployment Day**:
+
 - Automated smoke tests (critical flows)
 - Performance monitoring
 - Error rate monitoring
 
 **Week 1 Post-Release**:
+
 - Daily smoke tests
 - Real user monitoring analysis
 - Bug triage and hot-fix testing
@@ -428,14 +466,17 @@ describe('QuizService', () => {
 ### 7.5 Continuous Testing (Production)
 
 **Daily**:
+
 - Synthetic monitoring (uptime checks)
 - Automated smoke tests
 
 **Weekly**:
+
 - Full regression suite (off-peak hours)
 - Performance trend analysis
 
 **Monthly**:
+
 - Security vulnerability scan
 - Accessibility re-audit
 - Load testing (capacity planning)
