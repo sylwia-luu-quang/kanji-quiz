@@ -4,10 +4,16 @@ import SignUpForm from "../../components/SignUpForm";
 
 export const prerender = false;
 
-// TODO: Check for existing session and redirect authenticated users to dashboard
-// TODO: Extract redirect parameter from query string
+// Check for existing session and redirect authenticated users to dashboard
+const { user } = Astro.locals;
 
+// Extract redirect parameter from query string for post-signup navigation
 const redirectTo = Astro.url.searchParams.get("redirect") || "/dashboard";
+
+if (user) {
+  // User is already authenticated, redirect to specified page or dashboard
+  return Astro.redirect(redirectTo);
+}
 ---
 
 <Layout title="Sign Up - Kanji Quiz">
