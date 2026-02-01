@@ -5,7 +5,7 @@
 
 > Quick, repeatable kanji practice for JLPT levels N5–N1
 
-## Table of Contents
+## Table of Contents!
 
 1. [Project Description](#project-description)
 2. [Tech Stack](#tech-stack)
