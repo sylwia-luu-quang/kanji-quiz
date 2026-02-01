@@ -221,3 +221,91 @@ export function isQuestionType(value: unknown): value is QuestionType {
 export function isQuizStatus(value: unknown): value is QuizStatus {
   return typeof value === "string" && ["in_progress", "completed", "abandoned"].includes(value);
 }
+
+// ============================================================================
+// Authentication DTOs
+// ============================================================================
+
+/**
+ * Command model for user sign-in
+ * Used in: POST /api/auth/signin (request body)
+ */
+export interface SignInCommandDTO {
+  email: string;
+  password: string;
+}
+
+/**
+ * Command model for user sign-up
+ * Used in: POST /api/auth/signup (request body)
+ */
+export interface SignUpCommandDTO {
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+/**
+ * Response after successful sign-in
+ * Used in: POST /api/auth/signin (response)
+ */
+export interface SignInResponseDTO {
+  userId: string;
+  email: string;
+}
+
+/**
+ * Response after successful sign-up
+ * Used in: POST /api/auth/signup (response)
+ */
+export interface SignUpResponseDTO {
+  userId: string;
+  email: string;
+  emailConfirmationRequired: boolean;
+}
+
+/**
+ * User data in session
+ */
+export interface SessionUserDTO {
+  id: string;
+  email: string;
+}
+
+/**
+ * Authenticated session data
+ * Used in: GET /api/auth/session (response when authenticated)
+ */
+export interface AuthenticatedSessionDTO {
+  authenticated: true;
+  user: SessionUserDTO;
+  expiresAt: string | null;
+}
+
+/**
+ * Unauthenticated session data
+ * Used in: GET /api/auth/session (response when not authenticated)
+ */
+export interface UnauthenticatedSessionDTO {
+  authenticated: false;
+}
+
+/**
+ * Session response (union type)
+ * Used in: GET /api/auth/session (response)
+ */
+export type SessionResponseDTO = AuthenticatedSessionDTO | UnauthenticatedSessionDTO;
+
+/**
+ * Extended error response for authentication errors
+ */
+export interface AuthErrorResponseDTO extends ErrorResponseDTO {
+  code:
+    | "EMAIL_ALREADY_EXISTS"
+    | "INVALID_CREDENTIALS"
+    | "WEAK_PASSWORD"
+    | "SESSION_EXPIRED"
+    | "AUTH_SERVICE_ERROR"
+    | "AUTHENTICATION_REQUIRED"
+    | "VALIDATION_ERROR";
+}

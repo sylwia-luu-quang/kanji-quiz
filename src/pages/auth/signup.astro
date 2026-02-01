@@ -1,0 +1,17 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SignUpForm from "../../components/SignUpForm";
+
+export const prerender = false;
+
+// TODO: Check for existing session and redirect authenticated users to dashboard
+// TODO: Extract redirect parameter from query string
+
+const redirectTo = Astro.url.searchParams.get("redirect") || "/dashboard";
+---
+
+<Layout title="Sign Up - Kanji Quiz">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <SignUpForm client:load redirectTo={redirectTo} />
+  </div>
+</Layout>

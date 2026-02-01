@@ -18,7 +18,11 @@ import type {
 import type { CreateQuizCommandDTO, JLPTLevel } from "../types";
 import { useNeedReviewList, useQuizHistory, useStartQuiz, useRemoveNeedReview } from "./hooks/useDashboardData";
 
-export default function DashboardLayout() {
+interface DashboardLayoutProps {
+  userEmail: string;
+}
+
+export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
   // Pagination states
   const [needReviewPagination, setNeedReviewPagination] = useState<PaginationState>({
     limit: 10,
@@ -180,11 +184,6 @@ export default function DashboardLayout() {
     setHistoryPagination(newPagination);
   }, []);
 
-  const handleLogout = useCallback(() => {
-    // TODO: Implement logout functionality when authentication is ready
-    window.location.href = "/";
-  }, []);
-
   const handleLevelFormChange = useCallback((changes: Partial<LevelQuizFormState>) => {
     setLevelForm((prev) => ({ ...prev, ...changes }));
   }, []);
@@ -216,7 +215,7 @@ export default function DashboardLayout() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <DashboardHeader email="user@example.com" onLogout={handleLogout} />
+      <DashboardHeader email={userEmail} />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
