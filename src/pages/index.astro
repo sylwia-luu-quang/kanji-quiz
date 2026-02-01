@@ -1,8 +1,20 @@
 ---
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
----
+/**
+ * Home/Landing Page
+ * Redirects authenticated users to dashboard
+ * Redirects unauthenticated users to signin
+ */
 
-<Layout>
-  <Welcome />
-</Layout>
+export const prerender = false;
+
+// Check user session and redirect accordingly
+const { user } = Astro.locals;
+
+if (user) {
+  // Authenticated - redirect to dashboard
+  return Astro.redirect("/dashboard");
+} else {
+  // Not authenticated - redirect to signin
+  return Astro.redirect("/auth/signin");
+}
+---

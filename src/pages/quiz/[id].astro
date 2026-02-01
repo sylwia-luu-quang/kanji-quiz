@@ -1,0 +1,63 @@
+---
+/**
+ * Quiz Page - /quiz/[id]
+ *
+ * Dynamic route for taking a quiz. Loads quiz data server-side,
+ * validates ownership and status, then renders QuizContainer React island.
+ */
+
+import Layout from "../../layouts/Layout.astro";
+import { QuizContainer } from "../../components/QuizContainer";
+import type { QuizWithQuestionsDTO } from "../../types";
+import { QuizService } from "../../lib/services/quiz.service";
+import { QuizNotFoundError, QuizAccessDeniedError } from "../../lib/errors/quiz.errors";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/dashboard");
+}
+
+const quizId = parseInt(id, 10);
+if (isNaN(quizId) || quizId <= 0) {
+  return Astro.redirect("/dashboard");
+}
+
+const userId = Astro.locals.user?.id;
+
+if (!userId) {
+  return Astro.redirect(`/auth/signin?redirect=/quiz/${id}`);
+}
+
+let quiz: QuizWithQuestionsDTO;
+
+try {
+  const quizService = new QuizService(Astro.locals.supabase);
+  quiz = await quizService.getQuizById(quizId, userId);
+} catch (error) {
+  if (error instanceof QuizNotFoundError) {
+    return Astro.redirect("/dashboard");
+  }
+
+  if (error instanceof QuizAccessDeniedError) {
+    return Astro.redirect("/dashboard");
+  }
+
+  return Astro.redirect("/dashboard");
+}
+
+if (quiz.status === "abandoned") {
+  return Astro.redirect("/dashboard");
+}
+
+// If quiz is already completed, show it anyway (user can review their answers)
+// The QuizContainer will handle the completed state appropriately
+
+const pageTitle = `Quiz ${quiz.id} - ${quiz.type === "level" ? `Level ${quiz.level}` : "Need Review"}`;
+---
+
+<Layout title={pageTitle}>
+  <QuizContainer client:only="react" initialQuiz={quiz} quizId={quizId} />
+</Layout>

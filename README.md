@@ -1,94 +1,177 @@
-# 10x Astro Starter
+# Kanji Quiz
 
-A modern, opinionated starter template for building fast, accessible, and AI-friendly web applications.
+![Node.js version](https://img.shields.io/badge/node-22.14.0-blue)
+![License](https://img.shields.io/badge/license-TBD-lightgrey)
+
+> Quick, repeatable kanji practice for JLPT levels N5–N1
+
+## Table of Contents
+
+1. [Project Description](#project-description)
+2. [Tech Stack](#tech-stack)
+3. [Getting Started Locally](#getting-started-locally)
+4. [Available Scripts](#available-scripts)
+5. [Testing](#testing)
+6. [Project Scope](#project-scope)
+7. [Project Status](#project-status)
+8. [License](#license)
+
+## Project Description
+
+Kanji Quiz is a web application that helps Japanese-language learners prepare for the JLPT by delivering fast, focused kanji quizzes. Users pick a JLPT level (N5–N1) and question count, answer **reading** and **meaning** prompts, receive immediate feedback, and can flag kanji for later review. Minimal personal data is stored—just an email address for authentication and quiz-related stats.
 
 ## Tech Stack
 
-- [Astro](https://astro.build/) v5.5.5 - Modern web framework for building fast, content-focused websites
-- [React](https://react.dev/) v19.0.0 - UI library for building interactive components
-- [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4.0.17 - Utility-first CSS framework
+- **Frontend**: [Astro](https://astro.build/) 5 + [React](https://react.dev/) 19 (TypeScript 5)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) 4, [Shadcn/ui](https://ui.shadcn.com/)
+- **Backend-as-a-Service**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, Storage)
+- **Testing**:
+  - **Unit Tests**: [Vitest](https://vitest.dev/) (testing framework with native Vite integration)
+  - **Component Tests**: [React Testing Library](https://testing-library.com/react) + Vitest
+  - **E2E Tests**: [Playwright](https://playwright.dev/) (cross-browser testing)
+- **CI/CD & Hosting**: GitHub Actions → Docker → DigitalOcean
+- **AI integrations**: OpenRouter.ai for model access (optional stretch)
 
-## Prerequisites
+### Key Runtime Dependencies (excerpt)
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
-
-## Getting Started
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
+```jsonc
+{
+  "@astrojs/react": "^4.3.1",
+  "react": "^19.1.1",
+  "tailwindcss": "^4.1.13",
+}
 ```
 
-2. Install dependencies:
+> See `package.json` for the full list.
+
+## Getting Started Locally
+
+### Prerequisites
+
+- **Node.js 22.14.0** (see `.nvmrc`)
+- **npm** ≥ 10 or **pnpm** / **yarn**
+
+### Installation
 
 ```bash
-npm install
+# 1. Clone the repository
+$ git clone https://github.com/<your-org>/kanji-quiz.git
+$ cd kanji-quiz
+
+# 2. Install dependencies
+$ npm install
+# or
+$ pnpm install
+
+# 3. Start the development server
+$ npm run dev
 ```
 
-3. Run the development server:
+The site will be available at `http://localhost:3000` by default.
 
-```bash
-npm run dev
-```
-
-4. Build for production:
-
-```bash
-npm run build
-```
+> **Note**: To connect to a real Supabase instance, configure the required environment variables (e.g. `SUPABASE_URL`, `SUPABASE_ANON_KEY`). For local prototyping, the app will still run with mocked data until backend wiring is completed.
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
+The following npm scripts are defined in `package.json`:
 
-## Project Structure
+| Script            | Purpose                                                      |
+| ----------------- | ------------------------------------------------------------ |
+| `dev`             | Run Astro in development mode with hot reload                |
+| `build`           | Build the static site for production                         |
+| `preview`         | Serve the built site locally to preview the production build |
+| `astro`           | Direct access to the Astro CLI                               |
+| `lint`            | Lint all source files with ESLint                            |
+| `lint:fix`        | Lint and automatically fix issues                            |
+| `format`          | Format files using Prettier                                  |
+| `test`            | Run unit tests with Vitest                                   |
+| `test:ui`         | Run unit tests with Vitest UI                                |
+| `test:watch`      | Run unit tests in watch mode                                 |
+| `test:coverage`   | Run unit tests with coverage report                          |
+| `test:e2e`        | Run end-to-end tests with Playwright                         |
+| `test:e2e:ui`     | Run E2E tests with Playwright UI                             |
+| `test:e2e:headed` | Run E2E tests in headed mode (visible browser)               |
+| `test:e2e:debug`  | Run E2E tests in debug mode                                  |
+| `test:all`        | Run all tests (unit + E2E)                                   |
 
-```md
-.
-├── src/
-│   ├── layouts/    # Astro layouts
-│   ├── pages/      # Astro pages
-│   │   └── api/    # API endpoints
-│   ├── components/ # UI components (Astro & React)
-│   └── assets/     # Static assets
-├── public/         # Public assets
+Run any script with `npm run <script>` (or your preferred package manager).
+
+## Testing
+
+This project uses a comprehensive testing strategy to ensure code quality and reliability.
+
+### Unit & Component Tests (Vitest)
+
+```bash
+# Run all unit tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with UI
+npm run test:ui
+
+# Generate coverage report
+npm run test:coverage
 ```
 
-## AI Development Support
+### End-to-End Tests (Playwright)
 
-This project is configured with AI development tools to enhance the development experience, providing guidelines for:
+**Prerequisites**: E2E tests require Supabase credentials with service key access for test user setup:
 
-- Project structure
-- Coding practices
-- Frontend development
-- Styling with Tailwind
-- Accessibility best practices
-- Astro and React guidelines
+```bash
+# Required environment variables
+SUPABASE_URL=your-supabase-url
+SUPABASE_SERVICE_KEY=your-supabase-service-key
+```
 
-### Cursor IDE
+```bash
+# Run all E2E tests
+npm run test:e2e
 
-The project includes AI rules in `.cursor/rules/` directory that help Cursor IDE understand the project structure and provide better code suggestions.
+# Run E2E tests with UI
+npm run test:e2e:ui
 
-### GitHub Copilot
+# Run E2E tests in headed mode (see browser)
+npm run test:e2e:headed
 
-AI instructions for GitHub Copilot are available in `.github/copilot-instructions.md`
+# Debug E2E tests
+npm run test:e2e:debug
+```
 
-### Windsurf
+### Test Structure
 
-The `.windsurfrules` file contains AI configuration for Windsurf.
+```
+tests/               # Unit and component tests
+├── setup.ts        # Global test setup
+├── mocks/          # Mock utilities
+└── *.test.tsx      # Test files
 
-## Contributing
+e2e/                # End-to-end tests
+├── fixtures/       # Custom Playwright fixtures
+├── pages/          # Page Object Models
+└── *.spec.ts       # E2E test specs
+```
 
-Please follow the AI guidelines and coding practices defined in the AI configuration files when contributing to this project.
+For detailed testing guidelines, see [TESTING.md](./TESTING.md).
+
+## Project Scope
+
+**In scope (MVP)**
+
+- Level-based quizzes with immediate feedback
+- "Need review" marking & dedicated quiz mode
+- Email + password authentication
+- Basic history views
+- Static JSON kanji dataset
+
+Refer to the [PRD](./.ai/prd.md) for full user stories and acceptance criteria.
+
+## Project Status
+
+The project is currently in the MVP stage and under active development.
 
 ## License
 
-MIT
+This project is licensed under the MIT License.
