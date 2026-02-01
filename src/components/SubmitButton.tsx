@@ -15,7 +15,13 @@ interface SubmitButtonProps {
 
 export function SubmitButton({ onClick, disabled, isLoading }: SubmitButtonProps) {
   return (
-    <Button onClick={onClick} disabled={disabled || isLoading} className="w-full" size="lg">
+    <Button
+      data-testid="submit-answer-button"
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      className="w-full"
+      size="lg"
+    >
       {isLoading ? (
         <>
           <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />

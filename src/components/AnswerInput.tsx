@@ -74,6 +74,7 @@ export function AnswerInput({ questionType, value, onChange, onSubmit, disabled 
   return (
     <div className="space-y-2">
       <input
+        data-testid="answer-input"
         ref={inputRef}
         type="text"
         defaultValue={value}

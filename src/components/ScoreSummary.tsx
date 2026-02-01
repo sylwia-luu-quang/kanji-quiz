@@ -20,8 +20,10 @@ export function ScoreSummary({ scorePercent, correctCount, totalCount }: ScoreSu
 
   return (
     <div className="space-y-4 text-center">
-      <div className={`text-6xl font-bold ${getScoreColor()}`}>{scorePercent}%</div>
-      <div className="text-lg text-neutral-700 dark:text-neutral-300">
+      <div data-testid="score-percentage" className={`text-6xl font-bold ${getScoreColor()}`}>
+        {scorePercent}%
+      </div>
+      <div data-testid="score-summary" className="text-lg text-neutral-700 dark:text-neutral-300">
         {correctCount} out of {totalCount} correct
       </div>
     </div>

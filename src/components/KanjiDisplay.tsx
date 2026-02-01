@@ -13,6 +13,7 @@ export function KanjiDisplay({ character }: KanjiDisplayProps) {
   return (
     <div className="flex items-center justify-center py-8 md:py-12">
       <div
+        data-testid="kanji-display"
         className="text-8xl font-bold text-neutral-900 dark:text-neutral-100 md:text-[120px]"
         aria-label={`Kanji character: ${character}`}
       >

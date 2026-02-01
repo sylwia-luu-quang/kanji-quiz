@@ -22,7 +22,7 @@ export function NextQuestionButton({ onClick, isLastQuestion }: NextQuestionButt
   };
 
   return (
-    <Button onClick={handleClick} className="w-full" size="lg" disabled={isLoading}>
+    <Button data-testid="next-question-button" onClick={handleClick} className="w-full" size="lg" disabled={isLoading}>
       {isLoading ? (
         <>
           <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />

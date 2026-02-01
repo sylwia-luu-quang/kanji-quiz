@@ -23,7 +23,6 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
-  // Pagination states
   const [needReviewPagination, setNeedReviewPagination] = useState<PaginationState>({
     limit: 10,
     offset: 0,
@@ -36,7 +35,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     total: 0,
   });
 
-  // Form states
   const [levelForm, setLevelForm] = useState<LevelQuizFormState>({
     level: "",
     questionCount: null,
@@ -49,7 +47,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     isSubmitting: false,
   });
 
-  // Data fetching hooks
   const {
     data: needReviewData,
     loading: needReviewLoading,
@@ -72,7 +69,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
   const { startQuiz, error: startQuizError } = useStartQuiz();
   const { removeKanji, loading: removeKanjiLoading } = useRemoveNeedReview();
 
-  // Update available count when need-review data changes
   useEffect(() => {
     if (needReviewData) {
       setNeedReviewForm((prev) => ({
@@ -86,7 +82,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     }
   }, [needReviewData]);
 
-  // Update history pagination when data changes
   useEffect(() => {
     if (historyData) {
       setHistoryPagination((prev) => ({
@@ -96,7 +91,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     }
   }, [historyData]);
 
-  // Transform DTOs to ViewModels
   const needReviewList: NeedReviewListItemVM[] =
     needReviewData?.data.map((item) => ({
       id: item.id,
@@ -119,7 +113,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
       completedAt: item.completed_at,
     })) || [];
 
-  // Handlers
   const handleStartLevelQuiz = useCallback(async () => {
     if (!levelForm.level || !levelForm.questionCount) {
       return;
@@ -138,7 +131,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     setLevelForm((prev) => ({ ...prev, isSubmitting: false }));
 
     if (result) {
-      // Navigate to quiz page
       window.location.href = `/quiz/${result.id}`;
     }
   }, [levelForm, startQuiz]);
@@ -160,7 +152,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     setNeedReviewForm((prev) => ({ ...prev, isSubmitting: false }));
 
     if (result) {
-      // Navigate to quiz page
       window.location.href = `/quiz/${result.id}`;
     }
   }, [needReviewForm, startQuiz]);
@@ -169,7 +160,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     async (kanjiId: number) => {
       const success = await removeKanji(kanjiId);
       if (success) {
-        // Refresh the list after successful removal
         refreshNeedReview();
       }
     },
@@ -192,7 +182,6 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     setNeedReviewForm((prev) => ({ ...prev, ...changes }));
   }, []);
 
-  // Build view state
   const viewState: DashboardViewState = {
     levelForm,
     needReviewForm,
@@ -207,7 +196,7 @@ export default function DashboardLayout({ userEmail }: DashboardLayoutProps) {
     errors: {
       needReview: needReviewError || undefined,
       history: historyError || undefined,
-      levelQuiz: startQuizError?.code === "INSUFFICIENT_KANJI" ? startQuizError.error : undefined,
+      levelQuiz: startQuizError?.error,
       needReviewQuiz: startQuizError?.code === "INSUFFICIENT_KANJI" ? startQuizError.error : undefined,
     },
   };

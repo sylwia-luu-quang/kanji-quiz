@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({ path: path.resolve(process.cwd(), ".env.test") });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -34,7 +38,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     env: {
-      // Pass through environment variables to the dev server
+      NODE_ENV: "test",
       SUPABASE_URL: process.env.SUPABASE_URL || "",
       SUPABASE_KEY: process.env.SUPABASE_KEY || "",
     },

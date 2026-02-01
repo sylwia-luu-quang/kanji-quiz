@@ -1,12 +1,19 @@
 import type { Page } from "@playwright/test";
+import { LevelQuizCardComponent } from "./components/level-quiz-card.component";
 
 /**
  * Page Object Model for Dashboard page
  */
 export class DashboardPage {
-  constructor(private page: Page) {}
+  readonly levelQuizCard: LevelQuizCardComponent;
+  readonly page: Page;
 
-  // Locators
+  constructor(page: Page) {
+    this.page = page;
+    this.levelQuizCard = new LevelQuizCardComponent(page);
+  }
+
+  // Locators - Legacy (kept for backward compatibility)
   get quizLevelSelect() {
     return this.page.getByRole("combobox", { name: /jlpt level/i });
   }
@@ -37,6 +44,7 @@ export class DashboardPage {
     await this.page.waitForLoadState("networkidle");
   }
 
+  // Legacy actions (kept for backward compatibility)
   async selectQuizLevel(level: string) {
     // Click the combobox to open the dropdown
     await this.quizLevelSelect.click();

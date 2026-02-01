@@ -27,9 +27,11 @@ export function CompletionModal({
 }: CompletionModalProps) {
   return (
     <Dialog open={isOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent data-testid="completion-modal" className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl">Quiz Complete!</DialogTitle>
+          <DialogTitle data-testid="completion-modal-title" className="text-center text-2xl">
+            Quiz Complete!
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

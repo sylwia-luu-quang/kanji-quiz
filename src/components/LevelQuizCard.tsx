@@ -40,12 +40,12 @@ export default function LevelQuizCard({ formState, onChange, onSubmit, errorMess
             onValueChange={(value) => onChange({ level: value as JLPTLevel })}
             disabled={formState.isSubmitting}
           >
-            <SelectTrigger id="level-select">
+            <SelectTrigger id="level-select" data-testid="level-quiz-jlpt-level-select">
               <SelectValue placeholder="Select a level" />
             </SelectTrigger>
             <SelectContent>
               {JLPT_LEVELS.map((level) => (
-                <SelectItem key={level} value={level}>
+                <SelectItem key={level} value={level} data-testid={`level-quiz-jlpt-level-${level}`}>
                   {level}
                 </SelectItem>
               ))}
@@ -63,11 +63,16 @@ export default function LevelQuizCard({ formState, onChange, onSubmit, errorMess
             value={formState.questionCount?.toString() || ""}
             onValueChange={(value) => onChange({ questionCount: parseInt(value) as 1 | 10 | 20 | 50 })}
             disabled={formState.isSubmitting}
+            data-testid="level-quiz-question-count-group"
           >
             <div className="flex gap-4">
               {QUESTION_COUNTS.map((count) => (
                 <div key={count} className="flex items-center space-x-2">
-                  <RadioGroupItem value={count.toString()} id={`level-count-${count}`} />
+                  <RadioGroupItem
+                    value={count.toString()}
+                    id={`level-count-${count}`}
+                    data-testid={`level-quiz-question-count-${count}`}
+                  />
                   <label htmlFor={`level-count-${count}`} className="text-sm font-medium cursor-pointer">
                     {count}
                   </label>
@@ -79,13 +84,24 @@ export default function LevelQuizCard({ formState, onChange, onSubmit, errorMess
 
         {/* Error Message */}
         {errorMessage && (
-          <div role="alert" className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+          <div
+            role="alert"
+            className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md"
+            data-testid="level-quiz-error-message"
+          >
             {errorMessage}
           </div>
         )}
 
         {/* Start Button */}
-        <Button onClick={onSubmit} disabled={isDisabled} className="w-full" aria-label="Start level quiz">
+        <Button
+          type="button"
+          onClick={onSubmit}
+          disabled={isDisabled}
+          className="w-full"
+          aria-label="Start level quiz"
+          data-testid="level-quiz-start-button"
+        >
           {formState.isSubmitting ? "Starting..." : "Start Quiz"}
         </Button>
       </CardContent>

@@ -4,27 +4,31 @@ import type { Page } from "@playwright/test";
  * Page Object Model for Quiz page
  */
 export class QuizPage {
-  constructor(private page: Page) {}
+  readonly page: Page;
+
+  constructor(page: Page) {
+    this.page = page;
+  }
 
   // Locators
   get kanjiDisplay() {
-    return this.page.locator('[data-testid="kanji-display"]');
+    return this.page.getByTestId("kanji-display");
   }
 
   get questionPrompt() {
-    return this.page.locator('[data-testid="question-prompt"]');
+    return this.page.getByTestId("question-prompt");
   }
 
   get answerInput() {
-    return this.page.locator('input[type="text"][name="answer"]');
+    return this.page.getByTestId("answer-input");
   }
 
   get submitButton() {
-    return this.page.locator('button:has-text("Submit")');
+    return this.page.getByTestId("submit-answer-button");
   }
 
   get nextButton() {
-    return this.page.locator('button:has-text("Next Question")');
+    return this.page.getByTestId("next-question-button");
   }
 
   get abandonButton() {
@@ -40,15 +44,19 @@ export class QuizPage {
   }
 
   get completionModal() {
-    return this.page.locator('[data-testid="completion-modal"]');
+    return this.page.getByTestId("completion-modal");
   }
 
-  get finalScore() {
-    return this.page.locator('[data-testid="final-score"]');
+  get scorePercentage() {
+    return this.page.getByTestId("score-percentage");
+  }
+
+  get scoreSummary() {
+    return this.page.getByTestId("score-summary");
   }
 
   get returnToDashboardButton() {
-    return this.page.locator('button:has-text("Return to Dashboard")');
+    return this.page.getByTestId("return-to-dashboard-button");
   }
 
   // Actions
@@ -89,6 +97,72 @@ export class QuizPage {
   }
 
   async returnToDashboard() {
+    await this.returnToDashboardButton.click();
+    await this.page.waitForURL("/dashboard");
+  }
+
+  // New helper methods for complete quiz flow
+  async answerCurrentQuestion(answer: string) {
+    // Wait for input to be ready
+    await this.answerInput.waitFor({ state: "visible" });
+    await this.answerInput.fill(answer);
+    await this.submitButton.click();
+
+    // Wait for feedback to appear by waiting for next button to be visible
+    await this.nextButton.waitFor({ state: "visible", timeout: 10000 });
+  }
+
+  async proceedToNextQuestion() {
+    // Hide Astro dev toolbar if it exists (workaround for blocking clicks)
+    await this.page.evaluate(() => {
+      const toolbar = document.querySelector("astro-dev-toolbar");
+      if (toolbar) {
+        (toolbar as HTMLElement).style.display = "none";
+      }
+    });
+
+    // Wait for button to be visible
+    await this.nextButton.waitFor({ state: "visible", timeout: 10000 });
+
+    // Wait for button to be enabled and stable
+    await this.page.waitForFunction(
+      () => {
+        const button = document.querySelector('[data-testid="next-question-button"]') as HTMLButtonElement;
+        return button && !button.disabled && button.textContent && button.textContent.trim().length > 0;
+      },
+      { timeout: 10000 }
+    );
+
+    // Read the button text to determine next action
+    const buttonText = await this.nextButton.textContent();
+    const isFinishButton = buttonText?.includes("Finish");
+
+    // Click the button
+    await this.nextButton.click({ timeout: 10000 });
+
+    // If it was "Finish Quiz", wait for completion modal
+    if (isFinishButton) {
+      // Wait for the API call to complete and modal to appear
+      await this.completionModal.waitFor({ state: "visible", timeout: 30000 });
+    } else {
+      // Wait for next question's kanji to appear
+      await this.kanjiDisplay.waitFor({ state: "visible", timeout: 10000 });
+    }
+  }
+
+  async completeQuiz(answers: string[]) {
+    for (const answer of answers) {
+      await this.answerCurrentQuestion(answer);
+      await this.proceedToNextQuestion();
+    }
+  }
+
+  async getScoreFromModal() {
+    const scoreText = await this.scorePercentage.textContent();
+    return scoreText?.replace("%", "") || "0";
+  }
+
+  async closeModalAndReturnToDashboard() {
     await this.returnToDashboardButton.click();
     await this.page.waitForURL("/dashboard");
   }

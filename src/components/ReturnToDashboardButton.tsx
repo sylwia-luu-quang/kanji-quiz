@@ -13,7 +13,7 @@ interface ReturnToDashboardButtonProps {
 
 export function ReturnToDashboardButton({ onClick }: ReturnToDashboardButtonProps) {
   return (
-    <Button onClick={onClick} className="w-full" size="lg">
+    <Button data-testid="return-to-dashboard-button" onClick={onClick} className="w-full" size="lg">
       <Home className="mr-2 h-5 w-5" aria-hidden="true" />
       Return to Dashboard
     </Button>
