@@ -1,4 +1,4 @@
-# Kanji Quiz
+# Kanji Quiz!
 
 ![Node.js version](https://img.shields.io/badge/node-22.14.0-blue)
 ![License](https://img.shields.io/badge/license-TBD-lightgrey)
